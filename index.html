@@ -38,6 +38,7 @@ svg{width:100%;height:auto;display:block}.warn{color:#b4493c;font-size:.88rem}
 #pv{max-width:100%;border-radius:10px;border:1px solid var(--bd);margin-top:8px}
 [hidden]{display:none!important}
 input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;margin:4px 0;font-size:.9rem;color:var(--fg)}
+.ch.sa.on{background:#d99a1f;border-color:#d99a1f;color:#fff}
 .bl{display:inline-block;padding:5px 10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);text-decoration:none;font-size:.8rem}.bl.p{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
 .bd2{display:inline-block;padding:3px 10px;border-radius:99px;color:#fff;font-size:.8rem;font-weight:600}
 .aviso{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#2e9e5b;color:#fff;border-radius:12px;padding:6px 12px;margin-bottom:8px}.aviso button{background:rgba(255,255,255,.25);border:0;color:#fff}
@@ -56,7 +57,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 </style>
 </head>
 <body>
-<div class="top"><div class="row" style="margin:0;flex-wrap:nowrap;min-width:0;flex:1"><button class="mb np" id="mb" aria-label="Pedidos">☰</button><h1 id="ttl">Pedido</h1></div><span class="bd" id="bd">carregando…</span></div>
+<div class="top"><div class="row" style="margin:0;flex-wrap:nowrap;min-width:0;flex:1"><button class="mb np" id="mb" aria-label="Pedidos">☰</button><div style="min-width:0"><h1 id="ttl">Pedido</h1><div id="hsub" style="font-size:.72rem;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div></div><span class="bd" id="bd">carregando…</span></div>
 <div class="tabs np"><button class="tb on" data-t="p">Pedidos</button><button class="tb" data-t="cm">Corte madeira</button><button class="tb" data-t="mc">Marcenaria</button><button class="tb" data-t="es">Espumagem</button><button class="tb" data-t="cc">Corte e costura</button><button class="tb" data-t="mf">Montagem e finalização</button><button class="tb" data-t="en" hidden>Entrega</button><button class="tb" data-t="md" hidden>Modelos</button><button class="tb" data-t="eq" hidden>Equipe</button></div>
 
 <div id="login" style="position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
@@ -106,6 +107,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div id="cuts"></div>
 </div>
 
+<div id="rep" class="np"></div>
 <div class="ov np" id="ov" hidden></div>
 <aside class="dr np" id="dr" hidden>
 <div class="row" style="justify-content:space-between"><h2 style="margin:0">Pedidos</h2><button id="dx">✕</button></div>
@@ -118,10 +120,10 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <script type="module">
 import {initializeApp,getApps} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,createUserWithEmailAndPassword} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,getDoc,setDoc,deleteDoc,collection,onSnapshot,enableNetwork,waitForPendingWrites,runTransaction,updateDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,getDoc,setDoc,deleteDoc,collection,onSnapshot,enableNetwork,waitForPendingWrites,runTransaction,updateDoc,arrayUnion} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const FBCFG={apiKey:"AIzaSyAzRYMn8rQiGn9AeCZWWzH4EtiEgeBvEW8",authDomain:"fabricaluxor.firebaseapp.com",projectId:"fabricaluxor",storageBucket:"fabricaluxor.firebasestorage.app",messagingSenderId:"414992232553",appId:"1:414992232553:web:62a4eb066bd0c4e9bf32f8"};
 var $=function(i){return document.getElementById(i)};
-function NP(){return{id:"p"+Date.now(),cr:Date.now(),cm:[],cb:[],st:{},sit:"aguard",num:0,por:"",en:{},nome:"Novo pedido",mods:2,bracos:2,mw:130,mp:90,bw:15,bp:90,modelo:"Village",braco:"Quadrado",obs:""}}
+function NP(){return{id:"p"+Date.now(),cr:Date.now(),cm:[],cb:[],st:{},sit:"aguard",num:0,por:"",en:{},hist:[],nome:"Novo pedido",mods:2,bracos:2,mw:130,mp:90,bw:15,bp:90,modelo:"Village",braco:"Quadrado",obs:""}}
 function norm(p){var d=NP(),m=/^p(\d{10,})$/.exec(p.id||"");if(p.cr===undefined&&m)p.cr=+m[1];for(var k in d)if(p[k]===undefined)p[k]=d[k];return p}
 var first=NP();first.id="p1";first.nome="Pedido 1";
 var S={atual:"p1",pedidos:[first]},EDIT=false,EDITP=false,ROLE="",ME=null,DB=null,AUTH=null,ALLOWED=[],tms={},STARTED=false,TAB="p",MSEL=null,DEPTH=90,PNG=null,pt,FIL="1",D1="",D2="";
@@ -157,11 +159,12 @@ var ST={cm:"Corte madeira",mc:"Marcenaria",es:"Espumagem",cc:"Corte e costura",m
 function ico(s,z,k){z=z||18;var h='<svg width="'+z+'" height="'+z+'" viewBox="0 0 20 20" style="display:inline-block;vertical-align:middle;flex:none;width:'+z+'px;height:'+z+'px">';
 if(s=="prod")return h+'<circle cx="10" cy="10" r="10" fill="#2f7de1"/><path d="M8 6l6 4-6 4z" fill="#fff"/></svg>';
 if(s=="fin")return h+'<circle cx="10" cy="10" r="10" fill="#2e9e5b"/><path d="M5.5 10.5l3 3 6-6.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+if(s=="pause")return h+'<circle cx="10" cy="10" r="10" fill="#d99a1f"/><path d="M7 6h2v8H7zM11 6h2v8h-2z" fill="#fff"/></svg>';
 return k?'<span style="display:inline-block;width:'+z+'px"></span>':""}
 function stIcons(q){var s=q.st||{};if(TAB=="cm")return "";if(TAB!="p")return ico(s[TAB]||"",16);return ""}
 function sitOf(p){var s=p.st||{},N={mc:"Marcenaria",es:"Espumagem",cc:"Corte e costura",mf:"Montagem e finalização"};
 if(s.mf=="fin")return{k:"fin",t:"Finalizado",c:"#2e9e5b"};
-var L=["mc","es","cc","mf"];if(L.some(function(k){return s[k]=="prod"||s[k]=="fin"})){var cur=L.filter(function(k){return s[k]!="fin"})[0];return{k:"prod",t:"Em produção · "+N[cur],c:"#2f7de1"}}
+var L=["mc","es","cc","mf"];if(L.some(function(k){return s[k]=="prod"||s[k]=="fin"||s[k]=="pause"})){var cur=L.filter(function(k){return s[k]!="fin"})[0];return{k:"prod",t:"Em produção · "+N[cur]+(s[cur]=="pause"?" (pausado)":""),c:s[cur]=="pause"?"#d99a1f":"#2f7de1"}}
 if(p.sit=="conf")return{k:"conf",t:"Confirmado",c:"#3f7a7f"};
 return{k:"aguard",t:"Aguardando confirmação",c:"#b7791f"}}
 function sitR(p){var q=sitOf(p);$("sitbox").innerHTML='<span class="bd2" style="background:'+q.c+'">'+q.t+"</span>"+(EDIT&&(q.k=="aguard"||q.k=="conf")?'<button class="p" data-sit="1">'+(q.k=="aguard"?"Confirmar pedido":"Desfazer confirmação")+"</button>":"")}
@@ -173,8 +176,33 @@ function canStage(){return ["mc","es","cc","mf"].indexOf(TAB)>=0&&(EDIT||ALLOWED
 function EDITEN(){return EDIT||ALLOWED.indexOf("p")>=0}
 function pad(n){return ("000"+n).slice(-3)}
 function tt(q){return (q.num?pad(q.num)+" · ":"")+(q.nome||"(sem nome)")}
-function stat(){var p=mpd(),s=(p.st||{})[TAB]||"",lb={"":"Não iniciado",prod:"Em produção",fin:"Finalizado"}[s];
-$("stbox").innerHTML="<h2>"+ST[TAB]+'</h2><div class="row" style="margin:0 0 8px">'+ico(s,22)+"<b>"+lb+"</b></div>"+(canStage()?'<div class="row np"><button class="ch sb'+(s=="prod"?" on":"")+'" data-st="prod">'+ico("prod",16)+' Produção</button><button class="ch sg'+(s=="fin"?" on":"")+'" data-st="fin">'+ico("fin",16)+" Finalizado</button></div>":"")}
+function dtm(t){var d=new Date(t);return ("0"+d.getDate()).slice(-2)+"/"+("0"+(d.getMonth()+1)).slice(-2)+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}
+function dur(ms){var m=Math.round(ms/60000);if(m<1)return "menos de 1 min";var d=Math.floor(m/1440),h=Math.floor(m%1440/60),mi=m%60;return [d?d+"d":"",h?h+"h":"",(!d&&mi)?mi+"min":""].filter(Boolean).join(" ")}
+var LB={prod:"Produção",pause:"Pausado",fin:"Finalizado",reset:"Zerado"},RF="1";
+function evs(p,k){return (p.hist||[]).filter(function(e){return e.e==k}).sort(function(a,b){return a.t-b.t})}
+function info(p,k){var E=evs(p,k),ini=null,fim=null,run=0,work=0,pauses=0;
+E.forEach(function(e){if(e.a=="prod"){if(!ini)ini=e;if(!run)run=e.t}else if(e.a=="pause"||e.a=="fin"||e.a=="reset"){if(run){work+=e.t-run;run=0}if(e.a=="pause")pauses++;if(e.a=="fin")fim=e}});
+if(run)work+=Date.now()-run;return{E:E,ini:ini,fim:fim,work:work,run:!!run,pauses:pauses}}
+function hs(){if(["mc","es","cc","mf"].indexOf(TAB)<0)return "";var p=mpd(),I=info(p,TAB),s=(p.st||{})[TAB]||"",lp=I.E.filter(function(e){return e.a=="prod"}).pop();
+if(s=="prod"&&lp)return (I.pauses?"Retomado ":"Produção desde ")+dtm(lp.t)+(lp.n?" · "+lp.n:"");
+if(s=="pause"){var l=I.E[I.E.length-1];return l?"Pausado "+dtm(l.t):"Pausado"}
+if(s=="fin"&&I.fim)return "Finalizado "+dtm(I.fim.t);return ""}
+function stat(){var p=mpd(),s=(p.st||{})[TAB]||"",lb={"":"Não iniciado",prod:"Em produção",pause:"Pausado",fin:"Finalizado"}[s],I=info(p,TAB);
+var ev=I.E.slice(-4).map(function(e){return '<div class="s">'+LB[e.a]+" · "+dtm(e.t)+" · "+esc(e.n||"")+"</div>"}).join("");
+$("stbox").innerHTML="<h2>"+ST[TAB]+'</h2><div class="row" style="margin:0 0 8px">'+ico(s,22)+"<b>"+lb+"</b></div>"+(canStage()?'<div class="row np">'+[["prod","sb","Produção"],["pause","sa","Pausar"],["fin","sg","Finalizado"]].map(function(x){return '<button class="ch '+x[1]+(s==x[0]?" on":"")+'" data-st="'+x[0]+'">'+ico(x[0],16)+" "+x[2]+"</button>"}).join("")+"</div>":"")+ev}
+function rng(){var s=new Date();s.setHours(0,0,0,0);var t0=s.getTime();if(RF=="y")return[t0-86400000,t0-1];s.setDate(s.getDate()-((+RF||1)-1));return[s.getTime(),Date.now()]}
+function repUI(){var el=$("rep");if(!EDIT||["p","mc","es","cc","mf"].indexOf(TAB)<0){el.innerHTML="";return}
+var R=rng(),inr=function(t){return !!t&&t>=R[0]&&t<=R[1]},rows=[],per={};
+S.pedidos.forEach(function(q){if(q.ph)return;
+if(TAB=="p"){var fin=q.finAt||0;if(inr(q.cr)||inr(fin)){rows.push({k:q.cr||0,a:tt(q),b:"Lançado "+dtm(q.cr)+(q.por?" · "+q.por:""),c:fin?"Finalizado "+dtm(fin)+" · "+dur(fin-q.cr):"Em andamento"});if(inr(q.cr)){var o=per[q.por||"?"]=per[q.por||"?"]||{n:0,ms:0};o.n++}}return}
+var I=info(q,TAB);if(!I.ini&&!I.fim)return;
+if(inr(I.ini&&I.ini.t)||inr(I.fim&&I.fim.t)){rows.push({k:I.ini?I.ini.t:I.fim.t,a:tt(q),b:"Início "+(I.ini?dtm(I.ini.t)+" · "+(I.ini.n||""):"—"),c:(I.fim?"Fim "+dtm(I.fim.t)+" · "+(I.fim.n||"")+" · trabalhado "+dur(I.work):(I.run?"Em produção · "+dur(I.work):"Parado · trabalhado "+dur(I.work)))+(I.pauses?" · "+I.pauses+" pausa(s)":"")});
+if(I.fim){var o2=per[I.fim.n||"?"]=per[I.fim.n||"?"]||{n:0,ms:0};o2.n++;o2.ms+=I.work}}});
+rows.sort(function(a,b){return b.k-a.k});
+var chips=[["1","Hoje"],["y","Ontem"],["7","7 dias"],["15","15 dias"],["30","30 dias"]].map(function(c){return '<button class="ch'+(RF==c[0]?" on":"")+'" data-rf="'+c[0]+'">'+c[1]+"</button>"}).join("");
+var sm=Object.keys(per).map(function(n){var o=per[n];return '<div class="kv"><span>'+esc(n)+"</span><b>"+o.n+(TAB=="p"?" lançado(s)":" finalizado(s)"+(o.n?" · média "+dur(o.ms/o.n):""))+"</b></div>"}).join("");
+var ls=rows.map(function(r){return '<div class="kv" style="display:block"><b style="text-align:left">'+esc(r.a)+'</b><div class="s">'+esc(r.b)+'</div><div class="s">'+esc(r.c)+"</div></div>"}).join("");
+el.innerHTML='<div class="card v"><h2>Relatório · '+(TAB=="p"?"Pedidos":ST[TAB])+'</h2><div class="chips">'+chips+"</div>"+sm+(ls||'<p class="s">Nada neste período.</p>')+"</div>"}
 function lista(el,id){var L=S.pedidos.filter(inRange);if(!L.length){el.innerHTML='<p class="s">Nenhum pedido neste período.</p>';return}el.innerHTML=L.slice().sort(function(a,b){return (b.cr||0)-(a.cr||0)}).map(function(q){var g=geo(q);
 return '<button class="li'+(q.id==id?" on":"")+'" data-pick="'+q.id+'"><b>'+esc(tt(q))+'<span style="float:right">'+stIcons(q)+"</span></b><span>"+dt(q.cr)+" · "+g.m+" módulo(s) · "+g.b+" braço(s) · "+fm(g.t)+" cm · "+esc(q.modelo||"")+"</span>"+(TAB=="p"?'<span style="display:block;color:'+sitOf(q).c+';font-weight:600">'+sitOf(q).t+"</span>":"")+"</button>"}).join("")}
 function detM(){var p=byId(MSEL||S.atual),g=geo(p);
@@ -249,8 +277,12 @@ if(g("data-eqadd")){eqAdd();return true}
 var rm=g("data-rm");if(rm){if(ROLE=="dono"&&confirm("Remover o acesso desta pessoa?"))deleteDoc(doc(DB,"Users",rm));return true}
 if(g("data-sit")){if(EDIT){var p0=cp();p0.sit=p0.sit=="conf"?"aguard":"conf";render();save()}return true}
 var vi=g("data-vi");if(vi){var sn=[];try{sn=JSON.parse(localStorage.getItem("vistos")||"[]")}catch(e){}sn.push(vi);try{localStorage.setItem("vistos",JSON.stringify(sn))}catch(e){}avisos();return true}
+var rf=g("data-rf");if(rf){RF=rf;render();return true}
 var stt=g("data-st");
-if(stt){if(canStage()){var pp=mpd();pp.st=pp.st||{};pp.st[TAB]=(pp.st[TAB]==stt)?"":stt;if(TAB=="mf")pp.finAt=pp.st.mf=="fin"?(pp.finAt||Date.now()):0;render();save()}return true}
+if(stt){if(canStage()){var pp=mpd();pp.st=pp.st||{};var nv2=(pp.st[TAB]==stt)?"":stt;pp.st[TAB]=nv2;if(TAB=="mf")pp.finAt=pp.st.mf=="fin"?(pp.finAt||Date.now()):0;
+var ev={e:TAB,a:nv2||"reset",t:Date.now(),n:ME?ME.nome:"",u:ME?ME.uid:""};pp.hist=(pp.hist||[]).concat([ev]);render();
+var up={st:pp.st,hist:arrayUnion(ev)};if(TAB=="mf")up.finAt=pp.finAt||0;
+updateDoc(doc(DB,"pedidos",pp.id),up).catch(function(){alert("Sem permissão para salvar esta mudança.")})}return true}
 var gr=g("data-grp");if(gr){EXP[gr]=!EXP[gr];render();return true}
 var cg=g("data-cgrp");if(cg){EXP[cg]=!EXP[cg];FORM=null;render();return true}
 var ca=g("data-cadd");if(ca){if(EDIT){var inp=$("new_"+ca),nv=inp.value.trim();if(nv){var id="c"+Date.now();setDoc(doc(DB,ca,id),{nome:nv,pecas:[]});inp.value="";EXP["cat:"+id]=true}}return true}
@@ -275,7 +307,7 @@ if(FORM.i<0&&i==FORM.rows.length-1&&num(L.w)>0&&num(L.l)>0){FORM.rows.push({w:""
 
 function render(){
 var p=cp();
-$("bd").textContent=(ME?ME.nome:"")+(navigator.onLine?"":" · offline");$("ttl").textContent=TAB=="eq"?"Equipe":TAB=="md"?"Modelos":tt(TAB=="p"?p:mpd());sitR(p);avisos();
+$("bd").textContent=(ME?ME.nome:"")+(navigator.onLine?"":" · offline");$("ttl").textContent=TAB=="eq"?"Equipe":TAB=="md"?"Modelos":tt(TAB=="p"?p:mpd());sitR(p);avisos();$("hsub").textContent=hs();repUI();
 $("tabP").hidden=TAB!="p";$("tabM").hidden=TAB=="p"||TAB=="eq"||TAB=="md"||TAB=="en";$("tabN").hidden=TAB!="en";$("tabE").hidden=TAB!="eq";$("tabD").hidden=TAB!="md";
 document.querySelectorAll(".tb").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-t")==TAB)});
 $("nv").hidden=!EDITP;$("ex").hidden=!EDIT;
