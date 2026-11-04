@@ -55,7 +55,7 @@ svg{width:100%;height:auto;display:block}.warn{color:#b4493c;font-size:.88rem}
 </head>
 <body>
 <div class="top"><div class="row" style="margin:0;flex-wrap:nowrap;min-width:0;flex:1"><button class="mb np" id="mb" aria-label="Pedidos">☰</button><h1 id="ttl">Pedido</h1></div><span class="bd" id="bd">carregando…</span></div>
-<div class="tabs np"><button class="tb on" data-t="p">Pedidos</button><button class="tb" data-t="cm">Corte madeira</button><button class="tb" data-t="mc">Marcenaria</button><button class="tb" data-t="es">Espumagem</button><button class="tb" data-t="cc">Corte e costura</button><button class="tb" data-t="mf">Montagem e finalização</button><button class="tb" data-t="eq" hidden>Equipe</button></div>
+<div class="tabs np"><button class="tb on" data-t="p">Pedidos</button><button class="tb" data-t="cm">Corte madeira</button><button class="tb" data-t="mc">Marcenaria</button><button class="tb" data-t="es">Espumagem</button><button class="tb" data-t="cc">Corte e costura</button><button class="tb" data-t="mf">Montagem e finalização</button><button class="tb" data-t="md" hidden>Modelos</button><button class="tb" data-t="eq" hidden>Equipe</button></div>
 
 <div id="login" style="position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
 <div class="card" style="width:min(92vw,360px)"><h2>Fábrica Luxor</h2><label for="le">E-mail</label><input id="le" type="email" autocomplete="username" autocapitalize="off"><label for="lp" style="margin-top:8px">Senha</label><input id="lp" type="password" autocomplete="current-password"><div class="warn" id="lmsg"></div><button class="p" id="lb2" style="margin-top:10px;width:100%">Entrar</button></div></div>
@@ -95,6 +95,7 @@ svg{width:100%;height:auto;display:block}.warn{color:#b4493c;font-size:.88rem}
 <label for="eqn">Nome</label><input id="eqn"><label for="eqe" style="margin-top:8px">E-mail de login</label><input id="eqe" type="email" autocapitalize="off"><label for="eqs" style="margin-top:8px">Senha (mínimo 6 caracteres)</label><input id="eqs" type="text" autocapitalize="off">
 <label for="eqr" style="margin-top:8px">Função</label><select id="eqr" style="width:100%;font:inherit;padding:9px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--fg)"><option value="vendedora">Vendedora (Pedidos)</option><option value="marceneiro">Marceneiro</option><option value="espumagem">Espumagem</option><option value="costureira">Corte e costura</option><option value="montagem">Montagem e finalização</option><option value="dono">Dono (tudo)</option></select>
 <div class="warn" id="eqm"></div><button class="p" data-eqadd="1" style="margin-top:10px">Adicionar</button></div></div>
+<div id="tabD" hidden></div>
 <div id="tabM" hidden>
 <div class="card" id="stbox"></div>
 <div class="card"><h2>Pedido</h2><div id="det"></div></div>
@@ -174,82 +175,105 @@ var rows=[["Cliente",p.nome],["Modelo",p.modelo],["Tipo de braço",p.braco],["M�
 if(p.obs)rows.push(["Observação",p.obs]);
 $("det").innerHTML=rows.map(function(r){return '<div class="kv"><span>'+r[0]+"</span><b>"+esc(r[1])+"</b></div>"}).join("");
 paint($("all2"),g);return p.id}
-var FORM=null,EXP={};
+var FORM=null,EXP={},CAT={mod:[],br:[]};
 function fm2(x){return (Math.round(x*100)/100).toString().replace(".",",")}
 function fm3(x){return (Math.round(x*1000)/1000).toString().replace(".",",")}
 function mpd(){return byId(MSEL||S.atual)}
-function rowHtml(i,r,mad){return '<div class="g" style="grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px"><input data-fr="'+i+':w" inputmode="decimal" placeholder="Largura" value="'+esc(r.w)+'"><input data-fr="'+i+':l" inputmode="decimal" placeholder="Tamanho" value="'+esc(r.l)+'">'+'<input data-fr="'+i+':q" inputmode="numeric" placeholder="Qtd" value="'+esc(r.q)+'"></div>'}
-function formHtml(k){var v=FORM.v,mad=v.mat=="mad";
-return '<div class="card v np" style="margin:10px 0 0"><div class="row"><button class="ch'+(mad?"":" on")+'" data-mat="mdf">MDF</button><button class="ch'+(mad?" on":"")+'" data-mat="mad">Madeira</button></div>'
-+(k=="cm"?'<label>Local (encosto, caixa, assento...)</label><input data-fd="loc" list="lloc" value="'+esc(v.loc||"")+'"><datalist id="lloc"><option value="Encosto"><option value="Caixa"><option value="Assento"></datalist>':"")
-+'<label style="margin-top:8px">Medidas em cm: largura, tamanho'+", quantidade "+(k=="cm"?"por módulo":"por braço")+'</label><div id="frows">'+FORM.rows.map(function(r,i){return rowHtml(i,r,mad)}).join("")+"</div>"
-+'<div class="warn" id="fmsg"></div><div class="row" style="margin-top:8px"><button class="p" data-fa="save">'+(FORM.i<0?"Adicionar":"Salvar")+'</button><button data-fa="cancel">Cancelar</button>'+(FORM.i>=0?'<button data-fa="del">Excluir</button>':"")+"</div></div>"}
-function cuts(){var p=mpd(),g=geo(p),T={mdf:0,mad:0},sub={};
-function pc(it,mult){var n=num(it.q)*mult,mdf=it.mat=="mdf",v=mdf?num(it.w)*num(it.l)*n/10000:num(it.w)*2.5*num(it.l)*n/1e6;return{n:n,mdf:mdf,v:v,t:mdf?fm2(v)+" m²":fm3(v)+" m³"}}
-function row(k,i,it,mult){var c=pc(it,mult),tx="<b>"+(c.mdf?"MDF":"Madeira")+" · "+fm(num(it.w))+" × "+fm(num(it.l))+" cm</b><span>"+fm(num(it.q))+" × "+mult+" = "+fm(c.n)+" peça(s) · "+c.t+"</span>";
-if(!EDIT)return '<div class="sw"><div class="fg">'+tx+"</div></div>";
-return '<div class="sw"><div class="bgE">Editar</div><div class="bgD"><button data-del2="'+k+":"+i+'">Excluir</button></div><div class="fg" data-sw="'+k+":"+i+'">'+tx+"</div></div>"}
-function sec(k,tt,mult,un){var arr=p[k]||[],s={mdf:0,mad:0},grp=[],map={},r="";
-arr.forEach(function(it,i){var c=pc(it,mult);if(c.mdf)s.mdf+=c.v;else s.mad+=c.v;
-if(k=="cm"){var nm=(it.loc||"").trim()||"Peça",key=nm.toLowerCase();if(!map[key]){map[key]={nm:nm,items:[],mdf:0,mad:0};grp.push(map[key])}var G=map[key];G.items.push([i,it]);if(c.mdf)G.mdf+=c.v;else G.mad+=c.v}});
-if(k=="cm"){grp.forEach(function(G){var key=p.id+":"+k+":"+G.nm.toLowerCase(),open=EXP[key],sm=[];if(G.mdf)sm.push(fm2(G.mdf)+" m² MDF");if(G.mad)sm.push(fm3(G.mad)+" m³ madeira");
-r+='<button class="li" data-grp="'+esc(key)+'"><b>'+esc(G.nm)+'<span style="float:right;font-size:1rem;color:inherit">'+(open?"▾":"▸")+"</span></b><span>"+G.items.length+" peça(s)"+(sm.length?" · "+sm.join(" · "):"")+"</span></button>";
-if(open)r+='<div style="margin:0 0 8px 10px">'+G.items.map(function(x){return row(k,x[0],x[1],mult)}).join("")+"</div>"})}
-else arr.forEach(function(it,i){r+=row(k,i,it,mult)});
-T.mdf+=s.mdf;T.mad+=s.mad;sub[k]=s;
-return '<div class="card"><h2>'+tt+"</h2>"+(EDIT?'<button class="p np" data-add="'+k+'" style="margin-bottom:8px">+</button>':"")+'<p class="s">Multiplicado por '+mult+" "+un+(EDIT&&arr.length?" · arraste para a direita para editar e para a esquerda para excluir":"")+'</p><div class="lst">'+(r||'<p class="s">Nenhuma peça.</p>')+"</div>"+(FORM&&FORM.pid==p.id&&FORM.k==k?formHtml(k):"")+"</div>"}
-var h=sec("cm","Corte de madeira - Módulo",g.m,"módulo(s)")+sec("cb","Corte de madeira - Braços",g.b,"braço(s)");
+function nm(s){return String(s||"").trim().toLowerCase()}
+function catFind(L,name){var k=nm(name);return L.filter(function(x){return nm(x.nome)==k})[0]}
+function catList(coll){return coll=="modelos"?CAT.mod:CAT.br}
+function catById(coll,id){return catList(coll).filter(function(x){return x.id==id})[0]}
+function saveCat(coll,id){var c=catById(coll,id);if(c)setDoc(doc(DB,coll,id),{nome:c.nome,pecas:c.pecas})}
+function pcOf(it,mw,mult,sc){var f=(sc&&it.v!==0)?mw/100:1,l=num(it.l)*f,n=num(it.q)*mult,mdf=it.mat=="mdf",v=mdf?num(it.w)*l*n/10000:num(it.w)*2.5*l*n/1e6;return{l:l,n:n,mdf:mdf,v:v,t:mdf?fm2(v)+" m²":fm3(v)+" m³"}}
+function cuts(){
+var p=mpd(),g=geo(p),mod=catFind(CAT.mod,p.modelo),br=catFind(CAT.br,p.braco),T={mdf:0,mad:0},sub={cm:{mdf:0,mad:0},cb:{mdf:0,mad:0}};
+function row(it,mw,mult,sc,k){var c=pcOf(it,mw,mult,sc);if(c.mdf){sub[k].mdf+=c.v;T.mdf+=c.v}else{sub[k].mad+=c.v;T.mad+=c.v}
+return '<div class="sw"><div class="fg"><b>'+(c.mdf?"MDF":"Madeira")+" · "+fm(num(it.w))+" × "+fm(c.l)+" cm</b><span>"+fm(num(it.q))+" × "+mult+" = "+fm(c.n)+" peça(s) · "+c.t+"</span></div></div>"}
+var h='<div class="card"><h2>Corte de madeira - Módulo</h2><p class="s">Modelo: '+esc(p.modelo||"(não informado)")+" · "+g.m+" módulo(s) de "+fm(g.mw)+" cm</p>";
+if(!mod)h+='<p class="s">Modelo não encontrado no cadastro.'+(EDIT?" Cadastre na aba Modelos.":"")+"</p>";
+else{var grp=[],map={};(mod.pecas||[]).forEach(function(it){var n0=(it.loc||"").trim()||"Peça",key=nm(n0);if(!map[key]){map[key]={nm:n0,rows:[],mdf:0,mad:0};grp.push(map[key])}var G=map[key],c=pcOf(it,g.mw,g.m,true);G.rows.push(row(it,g.mw,g.m,true,"cm"));if(c.mdf)G.mdf+=c.v;else G.mad+=c.v});
+h+='<div class="lst">';grp.forEach(function(G){var key=p.id+":cm:"+nm(G.nm),open=EXP[key],sm=[];if(G.mdf)sm.push(fm2(G.mdf)+" m² MDF");if(G.mad)sm.push(fm3(G.mad)+" m³ madeira");
+h+='<button class="li" data-grp="'+esc(key)+'"><b>'+esc(G.nm)+'<span style="float:right;font-size:1rem;color:inherit">'+(open?"▾":"▸")+"</span></b><span>"+G.rows.length+" peça(s)"+(sm.length?" · "+sm.join(" · "):"")+"</span></button>";
+if(open)h+='<div style="margin:0 0 8px 10px">'+G.rows.join("")+"</div>"});
+h+="</div>"+(grp.length?"":'<p class="s">Nenhuma peça cadastrada neste modelo.</p>')}
+h+="</div>";
+h+='<div class="card"><h2>Corte de madeira - Braços</h2><p class="s">Tipo de braço: '+esc(p.braco||"(não informado)")+" · "+g.b+" braço(s)</p>";
+if(!br)h+='<p class="s">Tipo de braço não encontrado no cadastro.'+(EDIT?" Cadastre na aba Modelos.":"")+"</p>";
+else{var ar=(br.pecas||[]).map(function(it){return row(it,g.mw,g.b,false,"cb")});h+='<div class="lst">'+(ar.join("")||'<p class="s">Nenhuma peça cadastrada.</p>')+"</div>"}
+h+="</div>";
 function kv(a,b){return '<div class="kv"><span>'+a+"</span><b>"+b+"</b></div>"}
 h+='<div class="card v"><h2>Resumo de material</h2>'+kv("Módulos",fm2(sub.cm.mdf)+" m² MDF · "+fm3(sub.cm.mad)+" m³ madeira")+kv("Braços",fm2(sub.cb.mdf)+" m² MDF · "+fm3(sub.cb.mad)+" m³ madeira")+kv("Total de MDF",fm2(T.mdf)+" m²")+kv("Total de madeira",fm3(T.mad)+" m³")+"</div>";
-h+='<div class="row np"><button class="p" data-print="1">Imprimir</button></div>';$("cuts").innerHTML=h}
-function printCuts(){var p=mpd();(p.cm||[]).forEach(function(it){var nm=(it.loc||"").trim()||"Peça";EXP[p.id+":cm:"+nm.toLowerCase()]=true});FORM=null;render();setTimeout(function(){try{window.print()}catch(e){}},150)}
-function editItem(k,i){var p=mpd(),it0=p[k][i];if(!it0)return;FORM={pid:p.id,k:k,i:i,v:{loc:it0.loc||"",mat:it0.mat},rows:[{w:it0.w,l:it0.l,e:"",q:it0.q}]};render();var el=$("frows");if(el&&el.scrollIntoView)el.scrollIntoView({block:"center",behavior:"smooth"})}
+h+='<div class="row np"><button class="p" data-print="1">Imprimir</button></div>';
+$("cuts").innerHTML=h}
+function crow(coll,cid,i,it){var md=coll=="modelos";return '<div class="sw"><div class="bgE">Editar</div><div class="bgD"><button data-del2="'+coll+":"+cid+":"+i+'">Excluir</button></div><div class="fg" data-sw="'+coll+":"+cid+":"+i+'"><b>'+(md&&it.loc?esc(it.loc)+" · ":"")+(it.mat=="mdf"?"MDF":"Madeira")+" · "+fm(num(it.w))+" × "+fm(num(it.l))+" cm"+(md&&it.v===0?" (fixo)":"")+"</b><span>quantidade "+fm(num(it.q))+(md?" por módulo":" por braço")+"</span></div></div>"}
+function rowHtml(i,r){return '<div style="display:grid;grid-template-columns:1fr 1fr .8fr auto;gap:6px;margin-top:6px"><input data-fr="'+i+':w" inputmode="decimal" placeholder="Largura" value="'+esc(r.w)+'"><input data-fr="'+i+':l" inputmode="decimal" placeholder="Tamanho" value="'+esc(r.l)+'"><input data-fr="'+i+':q" inputmode="numeric" placeholder="Qtd" value="'+esc(r.q)+'">'+(FORM.coll=="modelos"?'<button data-vt="'+i+'">'+(r.v===0?"fixo":"↔")+"</button>":"<span></span>")+"</div>"}
+function formHtml(coll){var v=FORM.v,mad=v.mat=="mad",md=coll=="modelos";
+return '<div class="card v np" style="margin:10px 0 0"><div class="row"><button class="ch'+(mad?"":" on")+'" data-mat="mdf">MDF</button><button class="ch'+(mad?" on":"")+'" data-mat="mad">Madeira</button></div>'
++(md?'<label>Local (encosto, caixa, assento...)</label><input data-fd="loc" list="lloc" value="'+esc(v.loc||"")+'"><datalist id="lloc"><option value="Encosto"><option value="Caixa"><option value="Assento"></datalist>':"")
++'<label style="margin-top:8px">Largura, tamanho (cm) e quantidade'+(md?" por módulo de 1 m (100 cm). O botão ↔ faz o tamanho acompanhar a largura do módulo; toque nele para deixar fixo.":" por braço.")+'</label><div id="frows">'+FORM.rows.map(function(r,i){return rowHtml(i,r)}).join("")+"</div>"
++'<div class="warn" id="fmsg"></div><div class="row" style="margin-top:8px"><button class="p" data-fa="save">'+(FORM.i<0?"Adicionar":"Salvar")+'</button><button data-fa="cancel">Cancelar</button>'+(FORM.i>=0?'<button data-fa="del">Excluir</button>':"")+"</div></div>"}
+function catUI(){var h="";
+[["modelos","Modelos de sofá",CAT.mod,"Cadastre as madeiras para um módulo de 1 m (100 cm)."],["bracos","Tipos de braço",CAT.br,"Cadastre as madeiras de um braço."]].forEach(function(S2){var coll=S2[0];
+h+='<div class="card"><h2>'+S2[1]+'</h2><p class="s">'+S2[3]+'</p><div class="row np"><input id="new_'+coll+'" placeholder="Nome (ex.: '+(coll=="modelos"?"Village":"Quadrado")+')" style="flex:1"><button class="p" data-cadd="'+coll+'">Adicionar</button></div><div class="lst">';
+S2[2].forEach(function(c){var key="cat:"+c.id,open=EXP[key];
+h+='<button class="li" data-cgrp="'+key+'"><b>'+esc(c.nome)+'<span style="float:right;font-size:1rem;color:inherit">'+(open?"▾":"▸")+"</span></b><span>"+(c.pecas||[]).length+" peça(s)</span></button>";
+if(open)h+='<div style="margin:0 0 10px 10px">'+(c.pecas||[]).map(function(it,i){return crow(coll,c.id,i,it)}).join("")+'<div class="row np" style="margin-top:6px"><button class="p" data-add="'+coll+":"+c.id+'">+ peça</button><button data-cdel="'+coll+":"+c.id+'">Excluir '+(coll=="modelos"?"modelo":"tipo")+"</button></div>"+(FORM&&FORM.cid==c.id?formHtml(coll):"")+"</div>"});
+h+="</div></div>"});
+$("tabD").innerHTML=h}
+function printCuts(){var p=mpd(),mod=catFind(CAT.mod,p.modelo);if(mod)(mod.pecas||[]).forEach(function(it){EXP[p.id+":cm:"+nm((it.loc||"").trim()||"Peça")]=true});FORM=null;render();setTimeout(function(){try{window.print()}catch(e){}},150)}
+function editItem(coll,cid,i){var c=catById(coll,cid),it=c&&c.pecas[i];if(!it)return;FORM={coll:coll,cid:cid,i:i,v:{loc:it.loc||"",mat:it.mat},rows:[{w:it.w,l:it.l,q:it.q,v:it.v===0?0:1}]};render();var el=$("frows");if(el&&el.scrollIntoView)el.scrollIntoView({block:"center",behavior:"smooth"})}
 var SW=null;
 document.addEventListener("pointerdown",function(e){if(!EDIT)return;var fg=e.target.closest&&e.target.closest(".fg[data-sw]");if(!fg)return;
 document.querySelectorAll(".fg[data-sw]").forEach(function(x){if(x!==fg){x.style.transform="";x.removeAttribute("data-open")}});
 SW={fg:fg,x:e.clientX,dx:0,id:e.pointerId,open:fg.getAttribute("data-open")};fg.style.transition="none"});
 document.addEventListener("pointermove",function(e){if(!SW||e.pointerId!=SW.id)return;SW.dx=e.clientX-SW.x;var v=Math.max(-110,Math.min(110,(SW.open?-96:0)+SW.dx));SW.fg.style.transform="translateX("+v+"px)"});
 function swEnd(){if(!SW)return;var fg=SW.fg,tot=(SW.open?-96:0)+SW.dx;SW=null;fg.style.transition="transform .2s";
-if(tot>70){fg.style.transform="";fg.removeAttribute("data-open");var q=fg.getAttribute("data-sw").split(":");editItem(q[0],+q[1])}
+if(tot>70){fg.style.transform="";fg.removeAttribute("data-open");var q=fg.getAttribute("data-sw").split(":");editItem(q[0],q[1],+q[2])}
 else if(tot<-50){fg.style.transform="translateX(-96px)";fg.setAttribute("data-open","1")}
 else{fg.style.transform="";fg.removeAttribute("data-open")}}
 document.addEventListener("pointerup",swEnd);document.addEventListener("pointercancel",swEnd);
 function cutClick(b){
-var a=b.getAttribute("data-add"),m=b.getAttribute("data-mat"),ed=b.getAttribute("data-edit"),fa=b.getAttribute("data-fa"),p=mpd();
-if(b.getAttribute("data-print")){printCuts();return true}
-if(b.getAttribute("data-eqadd")){eqAdd();return true}
-var rm=b.getAttribute("data-rm");if(rm){if(ROLE=="dono"&&confirm("Remover o acesso desta pessoa?"))deleteDoc(doc(DB,"Users",rm));return true}
-if(b.getAttribute("data-sit")){if(EDIT){var p0=cp();p0.sit=p0.sit=="conf"?"aguard":"conf";render();save()}return true}
-var vi=b.getAttribute("data-vi");if(vi){var sn=[];try{sn=JSON.parse(localStorage.getItem("vistos")||"[]")}catch(e){}sn.push(vi);try{localStorage.setItem("vistos",JSON.stringify(sn))}catch(e){}avisos();return true}var stt=b.getAttribute("data-st");
+var g=function(n){return b.getAttribute(n)};
+if(g("data-print")){printCuts();return true}
+if(g("data-eqadd")){eqAdd();return true}
+var rm=g("data-rm");if(rm){if(ROLE=="dono"&&confirm("Remover o acesso desta pessoa?"))deleteDoc(doc(DB,"Users",rm));return true}
+if(g("data-sit")){if(EDIT){var p0=cp();p0.sit=p0.sit=="conf"?"aguard":"conf";render();save()}return true}
+var vi=g("data-vi");if(vi){var sn=[];try{sn=JSON.parse(localStorage.getItem("vistos")||"[]")}catch(e){}sn.push(vi);try{localStorage.setItem("vistos",JSON.stringify(sn))}catch(e){}avisos();return true}
+var stt=g("data-st");
 if(stt){if(canStage()){var pp=mpd();pp.st=pp.st||{};pp.st[TAB]=(pp.st[TAB]==stt)?"":stt;if(TAB=="mf")pp.finAt=pp.st.mf=="fin"?(pp.finAt||Date.now()):0;render();save()}return true}
-var gr=b.getAttribute("data-grp"),d2=b.getAttribute("data-del2");
-if(gr){EXP[gr]=!EXP[gr];render();return true}
-if(d2){if(EDIT){var q2=d2.split(":");p[q2[0]].splice(+q2[1],1);render();save()}return true}
-if(a){if(EDIT){FORM={pid:p.id,k:a,i:-1,v:{loc:"",mat:"mdf"},rows:[{w:"",l:"",e:"",q:1}]};render()}return true}
-if(m){if(FORM){FORM.v.mat=m;render()}return true}
-if(ed){if(EDIT){var q=ed.split(":");var it0=p[q[0]][+q[1]];FORM={pid:p.id,k:q[0],i:+q[1],v:{loc:it0.loc||"",mat:it0.mat},rows:[{w:it0.w,l:it0.l,e:it0.e||"",q:it0.q}]};render()}return true}
-if(fa&&FORM){var arr=p[FORM.k];
+var gr=g("data-grp");if(gr){EXP[gr]=!EXP[gr];render();return true}
+var cg=g("data-cgrp");if(cg){EXP[cg]=!EXP[cg];FORM=null;render();return true}
+var ca=g("data-cadd");if(ca){if(EDIT){var inp=$("new_"+ca),nv=inp.value.trim();if(nv){var id="c"+Date.now();setDoc(doc(DB,ca,id),{nome:nv,pecas:[]});inp.value="";EXP["cat:"+id]=true}}return true}
+var cd=g("data-cdel");if(cd){if(EDIT&&confirm("Excluir? Isso não afeta pedidos já lançados, mas eles deixam de calcular as madeiras.")){var qd=cd.split(":");deleteDoc(doc(DB,qd[0],qd[1]));FORM=null}return true}
+var vt=g("data-vt");if(vt!==null&&FORM){var rr=FORM.rows[+vt];rr.v=rr.v===0?1:0;render();return true}
+var d2=g("data-del2");if(d2){if(EDIT){var q2=d2.split(":"),c2=catById(q2[0],q2[1]);if(c2){c2.pecas.splice(+q2[2],1);saveCat(q2[0],q2[1])}render()}return true}
+var a=g("data-add");if(a){if(EDIT){var q3=a.split(":");FORM={coll:q3[0],cid:q3[1],i:-1,v:{loc:"",mat:"mdf"},rows:[{w:"",l:"",q:1,v:1}]};render()}return true}
+var m=g("data-mat");if(m){if(FORM){FORM.v.mat=m;render()}return true}
+var fa=g("data-fa");
+if(fa&&FORM){var c3=catById(FORM.coll,FORM.cid);if(!c3){FORM=null;render();return true}
 if(fa=="cancel"){FORM=null;render();return true}
-if(fa=="del"){arr.splice(FORM.i,1);FORM=null;render();save();return true}
-var v=FORM.v,its=[];FORM.rows.forEach(function(r){var w=num(r.w),l=num(r.l);if(w>0&&l>0)its.push({loc:v.loc||"",mat:v.mat,w:w,l:l,e:2.5,q:num(r.q)||1})});
+if(fa=="del"){c3.pecas.splice(FORM.i,1);saveCat(FORM.coll,FORM.cid);FORM=null;render();return true}
+var v=FORM.v,its=[];FORM.rows.forEach(function(r){var w=num(r.w),l=num(r.l);if(w>0&&l>0)its.push({loc:FORM.coll=="modelos"?(v.loc||""):"",mat:v.mat,w:w,l:l,q:num(r.q)||1,v:r.v===0?0:1})});
 if(!its.length){$("fmsg").textContent="Informe a largura e o tamanho.";return true}
-if(FORM.i<0)its.forEach(function(it){arr.push(it)});else arr[FORM.i]=its[0];FORM=null;render();save();return true}
+if(FORM.i<0)its.forEach(function(it){c3.pecas.push(it)});else c3.pecas[FORM.i]=its[0];
+saveCat(FORM.coll,FORM.cid);FORM=null;render();return true}
 return false}
 document.addEventListener("input",function(e){var t=e.target,d=t.getAttribute&&t.getAttribute("data-fd"),r=t.getAttribute&&t.getAttribute("data-fr");
 if(d&&FORM)FORM.v[d]=t.value;
 if(r&&FORM){var a=r.split(":"),i=+a[0];FORM.rows[i][a[1]]=t.value;var L=FORM.rows[FORM.rows.length-1];
-if(FORM.i<0&&i==FORM.rows.length-1&&num(L.w)>0&&num(L.l)>0){FORM.rows.push({w:"",l:"",e:"",q:1});$("frows").insertAdjacentHTML("beforeend",rowHtml(FORM.rows.length-1,FORM.rows[FORM.rows.length-1],FORM.v.mat=="mad"))}}});
+if(FORM.i<0&&i==FORM.rows.length-1&&num(L.w)>0&&num(L.l)>0){FORM.rows.push({w:"",l:"",q:1,v:1});$("frows").insertAdjacentHTML("beforeend",rowHtml(FORM.rows.length-1,FORM.rows[FORM.rows.length-1]))}}});
+
 function render(){
 var p=cp();
-$("bd").textContent=(RL[ROLE]||"")+(navigator.onLine?"":" · offline");$("ttl").textContent=TAB=="eq"?"Equipe":((TAB=="p"?p:mpd()).nome||"(sem nome)");sitR(p);avisos();
-$("tabP").hidden=TAB!="p";$("tabM").hidden=TAB=="p"||TAB=="eq";$("tabE").hidden=TAB!="eq";
+$("bd").textContent=(RL[ROLE]||"")+(navigator.onLine?"":" · offline");$("ttl").textContent=TAB=="eq"?"Equipe":TAB=="md"?"Modelos":((TAB=="p"?p:mpd()).nome||"(sem nome)");sitR(p);avisos();
+$("tabP").hidden=TAB!="p";$("tabM").hidden=TAB=="p"||TAB=="eq"||TAB=="md";$("tabE").hidden=TAB!="eq";$("tabD").hidden=TAB!="md";
 document.querySelectorAll(".tb").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-t")==TAB)});
 $("nv").hidden=!EDITP;$("ex").hidden=!EDIT;
 document.querySelectorAll("[data-k]").forEach(function(e){e.value=p[e.getAttribute("data-k")];e.disabled=!EDITP||!!p.ph});
 function opts(k){var u={};S.pedidos.forEach(function(q){if(q[k])u[q[k]]=1});return Object.keys(u).map(function(v){return '<option value="'+esc(v)+'">'}).join("")}
-$("lm").innerHTML=opts("modelo");$("lb").innerHTML=opts("braco");
+$("lm").innerHTML=opts("modelo")+CAT.mod.map(function(c){return '<option value="'+esc(c.nome)+'">'}).join("");$("lb").innerHTML=opts("braco")+CAT.br.map(function(c){return '<option value="'+esc(c.nome)+'">'}).join("");
 drawAll();
-if(TAB!="p"&&TAB!="eq"){detM();$("cuts").hidden=TAB!="cm";if(TAB=="cm")cuts();$("stbox").hidden=TAB=="cm";if(TAB!="cm")stat()}lista($("lst"),TAB!="p"?(MSEL||S.atual):p.id);chipsR()}
+if(TAB=="md")catUI();if(TAB!="p"&&TAB!="eq"&&TAB!="md"){detM();$("cuts").hidden=TAB!="cm";if(TAB=="cm")cuts();$("stbox").hidden=TAB=="cm";if(TAB!="cm")stat()}lista($("lst"),TAB!="p"?(MSEL||S.atual):p.id);chipsR()}
 function save(){var p=TAB=="p"?cp():mpd();if(!p||p.ph||!DB)return;var id=p.id;$("sv").textContent="";clearTimeout(tms[id]);
 tms[id]=setTimeout(function(){var q=S.pedidos.filter(function(x){return x.id==id})[0];if(!q)return;var d=JSON.parse(JSON.stringify(q));delete d.id;
 setDoc(doc(DB,"pedidos",id),d).catch(function(){$("sv").textContent="Sem permissão para salvar."});$("sv").textContent="Salvo."},400)}
@@ -286,12 +310,13 @@ $("nv").addEventListener("click",function(){var n=NP();S.pedidos=S.pedidos.filte
 $("ex").addEventListener("click",function(){if(S.pedidos.length<2||!confirm("Excluir este pedido?"))return;var id=S.atual;S.pedidos=S.pedidos.filter(function(q){return q.id!=id});S.atual=S.pedidos[0].id;render();deleteDoc(doc(DB,"pedidos",id))});
 $("pr").addEventListener("click",function(){try{window.print()}catch(e){}});
 render();
-var TABS={dono:["p","cm","mc","es","cc","mf","eq"],vendedora:["p"],marceneiro:["cm","mc"],espumagem:["es"],costureira:["cc"],montagem:["mf"]};
+var TABS={dono:["p","cm","mc","es","cc","mf","md","eq"],vendedora:["p"],marceneiro:["cm","mc"],espumagem:["es"],costureira:["cc"],montagem:["mf"]};
 function startData(){if(STARTED)return;STARTED=true;
 onSnapshot(collection(DB,"pedidos"),function(sn){var L=[];sn.forEach(function(d){var x=d.data();x.id=d.id;L.push(norm(x))});L.sort(function(a,b){return (a.cr||0)-(b.cr||0)});
 if(!L.length)L=[{ph:true,id:"ph",nome:"Nenhum pedido ainda",mods:1,bracos:0,mw:130,mp:90,bw:15,bp:90,modelo:"",braco:"",obs:"",cr:0,cm:[],cb:[],st:{},sit:"aguard"}];
 if(JSON.stringify(L)==JSON.stringify(S.pedidos))return;
 S.pedidos=L;if(!L.some(function(q){return q.id==S.atual}))S.atual=L[L.length-1].id;render()},function(){$("sv").textContent="Sem permissão para ler os pedidos."});
+["modelos","bracos"].forEach(function(coll){onSnapshot(collection(DB,coll),function(sn){var L=[];sn.forEach(function(d){var x=d.data();L.push({id:d.id,nome:x.nome||"",pecas:x.pecas||[]})});L.sort(function(a,b){return a.nome.localeCompare(b.nome)});if(coll=="modelos")CAT.mod=L;else CAT.br=L;render()},function(){})});
 if(ROLE=="dono")onSnapshot(collection(DB,"Users"),function(sn){var h="";sn.forEach(function(d){var x=d.data();h+='<div class="kv"><span>'+esc(x.Nome||"")+" · "+esc(x.Role||"")+"</span>"+(d.id==ME.uid?"":'<button data-rm="'+d.id+'">Remover</button>')+"</div>"});$("eqlist").innerHTML=h})}
 async function eqAdd(){var n=$("eqn").value.trim(),e=$("eqe").value.trim(),s=$("eqs").value,r=$("eqr").value,m=$("eqm");
 if(!n||!e||s.length<6){m.textContent="Preencha nome, e-mail e uma senha de 6 ou mais caracteres.";return}
