@@ -65,7 +65,8 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div id="avisos"></div>
 <div id="tabP">
 <div class="card">
-<div id="sitbox" class="row" style="margin-bottom:10px"></div>
+<div id="sitbox" class="row" style="margin-bottom:6px"></div>
+<div id="phist" style="margin-bottom:8px"></div>
 <div><label for="nome">Cliente / identificação</label><input id="nome" data-k="nome"></div>
 <div class="g" style="margin-top:12px">
 <div><label for="tam">Tamanho do sofá (cm)</label><input id="tam" disabled></div>
@@ -81,7 +82,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div><label for="braco">Tipo de braço</label><input id="braco" data-k="braco" list="lb"><datalist id="lb"></datalist></div>
 </div>
 <label for="obs" style="margin-top:12px">Observação</label><textarea id="obs" data-k="obs"></textarea>
-<div class="row np" style="margin-top:12px"><button id="ex" hidden>Excluir pedido</button><span class="s">Tudo é salvo automaticamente. <span id="sv"></span></span></div>
+<div class="row np" style="margin-top:12px"><button class="p" id="edb" hidden>Editar</button><button class="p" id="svb" hidden>Salvar</button><button id="cxb" hidden>Cancelar</button><button id="ex" hidden>Excluir pedido</button></div><p class="s" id="sv"></p>
 </div>
 <div class="card v">
 <h2>Vista de cima</h2>
@@ -90,6 +91,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div class="row np" style="margin-top:10px"><button class="p" id="sh">Compartilhar pedido</button><button id="pr">Imprimir</button><span class="s" id="sh2"></span></div>
 <div id="pvw" class="np"></div>
 </div>
+<div id="fotoP"></div>
 </div>
 
 <div id="tabE" hidden>
@@ -127,7 +129,7 @@ var $=function(i){return document.getElementById(i)};
 function NP(){return{id:"p"+Date.now(),cr:Date.now(),cm:[],cb:[],st:{},sit:"aguard",num:0,por:"",en:{},hist:[],nome:"Novo pedido",mods:2,bracos:2,mw:130,mp:90,bw:15,bp:90,modelo:"Village",braco:"Quadrado",obs:""}}
 function norm(p){var d=NP(),m=/^p(\d{10,})$/.exec(p.id||"");if(p.cr===undefined&&m)p.cr=+m[1];for(var k in d)if(p[k]===undefined)p[k]=d[k];return p}
 var first=NP();first.id="p1";first.nome="Pedido 1";
-var S={atual:"p1",pedidos:[first]},EDIT=false,EDITP=false,ROLE="",ME=null,DB=null,AUTH=null,ALLOWED=[],tms={},STARTED=false,TAB="p",MSEL=null,DEPTH=90,PNG=null,pt,FIL="1",D1="",D2="";
+var S={atual:"p1",pedidos:[first]},EDIT=false,EDITP=false,ROLE="",ME=null,DB=null,AUTH=null,ALLOWED=[],tms={},STARTED=false,EDITING=null,DRAFT=null,ORIG="",FUN=null,FID=null,TAB="p",MSEL=null,DEPTH=90,PNG=null,pt,FIL="1",D1="",D2="";
 var VAR={wood:"var(--mod)",wood2:"var(--arm)",ink:"var(--ink)"},HEX={wood:"#cfe3e0",wood2:"#e5d3b3",ink:"#1f3b3f"};
 function byId(id){return S.pedidos.filter(function(p){return p.id==id})[0]||S.pedidos[0]}
 function cp(){return byId(S.atual)}
@@ -179,7 +181,7 @@ function pad(n){return ("000"+n).slice(-3)}
 function tt(q){return (q.num?pad(q.num)+" · ":"")+(q.nome||"(sem nome)")}
 function dtm(t){var d=new Date(t);return ("0"+d.getDate()).slice(-2)+"/"+("0"+(d.getMonth()+1)).slice(-2)+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}
 function dur(ms){var m=Math.round(ms/60000);if(m<1)return "menos de 1 min";var d=Math.floor(m/1440),h=Math.floor(m%1440/60),mi=m%60;return [d?d+"d":"",h?h+"h":"",(!d&&mi)?mi+"min":""].filter(Boolean).join(" ")}
-var LB={prod:"Produção",pause:"Pausado",fin:"Finalizado",reset:"Zerado"},RF="1";
+var LB={prod:"Produção",pause:"Pausado",fin:"Finalizado",reset:"Zerado",criado:"Criado",editado:"Editado",confirmado:"Confirmado",desconfirmado:"Confirmação desfeita"},RF="1";
 function evs(p,k){return (p.hist||[]).filter(function(e){return e.e==k}).sort(function(a,b){return a.t-b.t})}
 function info(p,k){var E=evs(p,k),ini=null,fim=null,run=0,work=0,pauses=0;
 E.forEach(function(e){if(e.a=="prod"){if(!ini)ini=e;if(!run)run=e.t}else if(e.a=="pause"||e.a=="fin"||e.a=="reset"){if(run){work+=e.t-run;run=0}if(e.a=="pause")pauses++;if(e.a=="fin")fim=e}});
@@ -277,7 +279,7 @@ var es=g("data-eqsv");if(es){var ab2=[].slice.call(document.querySelectorAll("#e
 if(g("data-print")){printCuts();return true}
 if(g("data-eqadd")){eqAdd();return true}
 var rm=g("data-rm");if(rm){if(ROLE=="dono"&&confirm("Remover o acesso desta pessoa?"))deleteDoc(doc(DB,"Users",rm));return true}
-if(g("data-sit")){if(EDIT){var p0=cp();p0.sit=p0.sit=="conf"?"aguard":"conf";render();save()}return true}
+if(g("data-sit")){if(EDIT){var p0=cp();if(!p0.ph&&!(DRAFT&&DRAFT.id==p0.id)){p0.sit=p0.sit=="conf"?"aguard":"conf";var ev0={e:"p",a:p0.sit=="conf"?"confirmado":"desconfirmado",t:Date.now(),n:ME?ME.nome:"",u:ME?ME.uid:""};p0.hist=(p0.hist||[]).concat([ev0]);render();updateDoc(doc(DB,"pedidos",p0.id),{sit:p0.sit,hist:arrayUnion(ev0)}).catch(function(){})}}return true}
 var vi=g("data-vi");if(vi){var sn=[];try{sn=JSON.parse(localStorage.getItem("vistos")||"[]")}catch(e){}sn.push(vi);try{localStorage.setItem("vistos",JSON.stringify(sn))}catch(e){}avisos();return true}
 var rf=g("data-rf");if(rf){RF=rf;render();return true}
 var stt=g("data-st");
@@ -309,18 +311,18 @@ if(FORM.i<0&&i==FORM.rows.length-1&&num(L.w)>0&&num(L.l)>0){FORM.rows.push({w:""
 
 function render(){
 var p=cp();
-$("bd").textContent=(ME?ME.nome:"")+(navigator.onLine?"":" · offline");$("ttl").textContent=TAB=="eq"?"Equipe":TAB=="md"?"Modelos":tt(TAB=="p"?p:mpd());sitR(p);avisos();$("hsub").textContent=hs();repUI();fotoUI();
+$("bd").textContent=(ME?ME.nome:"")+(navigator.onLine?"":" · offline");$("ttl").textContent=TAB=="eq"?"Equipe":TAB=="md"?"Modelos":tt(TAB=="p"?p:mpd());sitR(p);phR(p);avisos();$("hsub").textContent=hs();repUI();fotoUI();
 $("tabP").hidden=TAB!="p";$("tabM").hidden=TAB=="p"||TAB=="eq"||TAB=="md"||TAB=="en";$("tabN").hidden=TAB!="en";$("tabE").hidden=TAB!="eq";$("tabD").hidden=TAB!="md";
 document.querySelectorAll(".tb").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-t")==TAB)});
-$("nv").hidden=!EDITP;$("ex").hidden=!EDIT;
-document.querySelectorAll("[data-k]").forEach(function(e){e.value=p[e.getAttribute("data-k")];e.disabled=!EDITP||!!p.ph});
+$("nv").hidden=!EDITP;var edn=EDITP&&EDITING==p.id&&!p.ph;$("edb").hidden=!(EDITP&&!edn&&!p.ph);$("svb").hidden=!edn;$("cxb").hidden=!edn;$("ex").hidden=!(EDIT&&!edn&&!p.ph);
+document.querySelectorAll("[data-k]").forEach(function(e){e.value=p[e.getAttribute("data-k")];e.disabled=!edn});
 function opts(k){var u={};S.pedidos.forEach(function(q){if(q[k])u[q[k]]=1});return Object.keys(u).map(function(v){return '<option value="'+esc(v)+'">'}).join("")}
 $("lm").innerHTML=opts("modelo")+CAT.mod.map(function(c){return '<option value="'+esc(c.nome)+'">'}).join("");$("lb").innerHTML=opts("braco")+CAT.br.map(function(c){return '<option value="'+esc(c.nome)+'">'}).join("");
 drawAll();
 if(TAB=="md")catUI();if(TAB=="en")detN();if(TAB!="p"&&TAB!="eq"&&TAB!="md"&&TAB!="en"){detM();$("cuts").hidden=TAB!="cm";if(TAB=="cm")cuts();$("stbox").hidden=TAB=="cm";if(TAB!="cm")stat()}lista($("lst"),TAB!="p"?(MSEL||S.atual):p.id);chipsR()}
 function save(){var p=TAB=="p"?cp():mpd();if(!p||p.ph||!DB)return;var id=p.id,tb=TAB;$("sv").textContent="";clearTimeout(tms[id+tb]);
 tms[id+tb]=setTimeout(function(){var q=S.pedidos.filter(function(x){return x.id==id})[0];if(!q)return;var r=doc(DB,"pedidos",id),pr;
-if(tb=="p"){var d=JSON.parse(JSON.stringify(q));delete d.id;pr=setDoc(r,d)}
+if(tb=="p")pr=updateDoc(r,{sit:q.sit||"aguard"});
 else if(tb=="en")pr=updateDoc(r,{en:q.en||{}});
 else if(["mc","es","cc","mf"].indexOf(tb)>=0){var u={st:q.st||{}};if(tb=="mf")u.finAt=q.finAt||0;pr=updateDoc(r,u)}
 else return;
@@ -350,16 +352,27 @@ st.textContent="Gerando imagem…";toPng(p,function(b){st.textContent="";if(!b){
 document.addEventListener("change",function(e){var t=e.target,k=t.getAttribute&&t.getAttribute("data-k");
 if(t.id=="fin"&&t.files&&t.files[0]){upFoto(t.files[0]);t.value="";return}
 var en=t.getAttribute&&t.getAttribute("data-en");if(en){if(EDITEN()){var q0=mpd();if(!q0.ph){q0.en=q0.en||{};q0.en[en]=t.value;save();render()}}return}
-if(t.id=="d1"||t.id=="d2"){D1=$("d1").value;D2=$("d2").value;render();return}if(!k||!EDITP)return;var p=cp();if(p.ph)return;p[k]=t.getAttribute("data-n")?num(t.value):t.value;render();save()});
-document.addEventListener("input",function(e){var t=e.target;if(t.getAttribute&&t.getAttribute("data-n")&&EDITP&&!cp().ph){cp()[t.getAttribute("data-k")]=num(t.value);drawAll()}});
+if(t.id=="d1"||t.id=="d2"){D1=$("d1").value;D2=$("d2").value;render();return}if(!k||!EDITP)return;var p=cp();if(p.ph||EDITING!=p.id)return;p[k]=t.getAttribute("data-n")?num(t.value):t.value;render()});
+document.addEventListener("input",function(e){var t=e.target;if(t.getAttribute&&t.getAttribute("data-n")&&EDITP&&!cp().ph&&EDITING==cp().id){cp()[t.getAttribute("data-k")]=num(t.value);drawAll()}});
 document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("button");if(!b)return;
 if(cutClick(b))return;var tab=b.getAttribute("data-t"),pk=b.getAttribute("data-pick"),f=b.getAttribute("data-f");if(f){FIL=f;render();return}
 if(tab){FORM=null;if(tab!="p"&&TAB=="p")MSEL=S.atual;TAB=tab;render();return}
-if(pk){FORM=null;if(TAB!="p"){MSEL=pk}else{S.atual=pk}render();openD(false)}});
-$("nv").addEventListener("click",async function(){var n=NP(),id=n.id;n.por=ME?ME.nome:"";
-try{await runTransaction(DB,async function(tx){var cr=doc(DB,"meta","contador"),sn=await tx.get(cr),k=(sn.exists()?sn.data().n:0)+1;n.num=k;var d=JSON.parse(JSON.stringify(n));delete d.id;tx.set(cr,{n:k});tx.set(doc(DB,"pedidos",id),d)})}catch(e){alert("Não foi possível criar o pedido. Confira se está com internet e tente de novo.");return}
-S.pedidos=S.pedidos.filter(function(x){return !x.ph});if(!S.pedidos.some(function(x){return x.id==id}))S.pedidos.push(n);S.atual=id;TAB="p";render();openD(false)});$("mb").addEventListener("click",function(){openD(true)});$("dx").addEventListener("click",function(){openD(false)});$("ov").addEventListener("click",function(){openD(false)});
-$("ex").addEventListener("click",function(){if(S.pedidos.length<2||!confirm("Excluir este pedido?"))return;var id=S.atual;S.pedidos=S.pedidos.filter(function(q){return q.id!=id});S.atual=S.pedidos[0].id;render();deleteDoc(doc(DB,"pedidos",id))});
+if(pk){FORM=null;if(DRAFT&&pk!=DRAFT.id){S.pedidos=S.pedidos.filter(function(x){return x.id!=DRAFT.id});DRAFT=null}EDITING=null;if(TAB!="p"){MSEL=pk}else{S.atual=pk}render();openD(false)}});
+$("nv").addEventListener("click",function(){var n=NP();n.nome="";n.por=ME?ME.nome:"";DRAFT=n;EDITING=n.id;S.pedidos=S.pedidos.filter(function(x){return !x.ph&&(!DRAFT||x.id!=DRAFT.id||x===n)});S.pedidos.push(n);S.atual=n.id;TAB="p";$("sv").textContent="";render();openD(false)});
+$("edb").addEventListener("click",function(){var p=cp();if(!p||p.ph||!EDITP)return;EDITING=p.id;ORIG=JSON.stringify(p);$("sv").textContent="";render()});
+$("cxb").addEventListener("click",function(){var p=cp();if(!p)return;
+if(DRAFT&&DRAFT.id==p.id){S.pedidos=S.pedidos.filter(function(x){return x.id!=p.id});DRAFT=null;ensurePh();S.atual=S.pedidos[S.pedidos.length-1].id}
+else if(ORIG){var o=norm(JSON.parse(ORIG));S.pedidos=S.pedidos.map(function(x){return x.id==o.id?o:x})}
+EDITING=null;ORIG="";$("sv").textContent="";render()});
+$("svb").addEventListener("click",async function(){var p=cp(),m=$("sv");if(!p||EDITING!=p.id)return;
+if(!String(p.nome||"").trim()){m.textContent="Informe o cliente.";return}
+var nov=DRAFT&&DRAFT.id==p.id,ev={e:"p",a:nov?"criado":"editado",t:Date.now(),n:ME?ME.nome:"",u:ME?ME.uid:""};m.textContent="Salvando…";
+if(nov){try{var id=p.id;await runTransaction(DB,async function(tx){var cr=doc(DB,"meta","contador"),sn=await tx.get(cr),k=(sn.exists()?sn.data().n:0)+1;p.num=k;p.hist=[ev];p.cr=Date.now();var d=JSON.parse(JSON.stringify(p));delete d.id;tx.set(cr,{n:k});tx.set(doc(DB,"pedidos",id),d)});DRAFT=null;EDITING=null;m.textContent="Salvo.";render()}catch(e){m.textContent="Não foi possível criar o pedido. Confira a internet e tente de novo."}return}
+p.hist=(p.hist||[]).concat([ev]);EDITING=null;ORIG="";m.textContent="Salvo.";render();
+updateDoc(doc(DB,"pedidos",p.id),{nome:p.nome,mods:p.mods,bracos:p.bracos,mw:p.mw,bw:p.bw,modelo:p.modelo||"",braco:p.braco||"",obs:p.obs||"",hist:arrayUnion(ev)}).catch(function(){$("sv").textContent="Sem permissão para salvar a edição."})});$("mb").addEventListener("click",function(){openD(true)});$("dx").addEventListener("click",function(){openD(false)});$("ov").addEventListener("click",function(){openD(false)});
+$("ex").addEventListener("click",function(){var p=cp(),b=$("ex");if(!p||p.ph||EDITING==p.id)return;
+if(b.getAttribute("data-c")!="1"){b.setAttribute("data-c","1");b.textContent="Toque de novo para excluir";setTimeout(function(){b.removeAttribute("data-c");b.textContent="Excluir pedido"},4000);return}
+b.removeAttribute("data-c");b.textContent="Excluir pedido";var id=p.id;S.pedidos=S.pedidos.filter(function(q){return q.id!=id});ensurePh();S.atual=S.pedidos[S.pedidos.length-1].id;render();deleteDoc(doc(DB,"pedidos",id));deleteDoc(doc(DB,"fotos",id))});
 $("pr").addEventListener("click",function(){try{window.print()}catch(e){}});
 render();
 var TABS={dono:["p","cm","mc","es","cc","mf","md","eq"],vendedora:["p"],marceneiro:["cm","mc"],espumagem:["es"],costureira:["cc"],montagem:["mf"]};
@@ -388,13 +401,24 @@ compress(file,1100,.72,function(d){if(d&&d.length>800000)return compress(file,80
 function fin(d){if(!d||d.length>900000){if($("fmsg2"))$("fmsg2").textContent="Não foi possível usar essa foto. Tente outra.";return}
 var f={img:d,t:Date.now(),n:ME?ME.nome:""};FOTOS[p.id]=f;fotoUI();
 setDoc(doc(DB,"fotos",p.id),f).catch(function(){FOTOS[p.id]=null;fotoUI();if($("fmsg2"))$("fmsg2").textContent="Sem permissão para enviar a foto."})}}
-function fotoUI(){var el=$("foto");if(TAB!="mf"){el.innerHTML="";return}var p=mpd();if(!p||p.ph){el.innerHTML="";return}
-var f=FOTOS[p.id];if(f===undefined&&!FREQ[p.id]){FREQ[p.id]=1;getDoc(doc(DB,"fotos",p.id)).then(function(s){FOTOS[p.id]=s.exists()?s.data():null;fotoUI()}).catch(function(){FOTOS[p.id]=null;fotoUI()})}
+function PH(){return {ph:true,id:"ph",nome:"Nenhum pedido ainda",mods:1,bracos:0,mw:130,mp:90,bw:15,bp:90,modelo:"",braco:"",obs:"",cr:0,cm:[],cb:[],st:{},sit:"aguard",num:0,por:"",en:{},hist:[]}}
+function ensurePh(){if(!S.pedidos.length)S.pedidos=[PH()]}
+function phR(p){var h="";if(!p.ph&&!(DRAFT&&DRAFT.id==p.id)){var E=evs(p,"p"),cr=E.filter(function(e){return e.a=="criado"})[0];
+h='<div class="s">Lançado '+dtm(cr?cr.t:p.cr)+" · "+esc(cr?cr.n:(p.por||""))+"</div>";
+E.filter(function(e){return e.a!="criado"}).slice(-3).forEach(function(e){h+='<div class="s">'+LB[e.a]+" "+dtm(e.t)+" · "+esc(e.n||"")+"</div>"})}
+$("phist").innerHTML=h}
+function fotoSub(id){if(FID==id)return;if(FUN)FUN();FID=id;FUN=onSnapshot(doc(DB,"fotos",id),function(sn){FOTOS[id]=sn.exists()?sn.data():null;fotoUI()},function(){FOTOS[id]=null;fotoUI()})}
+function fotoUI(){var A=$("foto"),B=$("fotoP");if(TAB!="mf"&&TAB!="p"){A.innerHTML="";B.innerHTML="";return}
+var el=TAB=="p"?B:A;(TAB=="p"?A:B).innerHTML="";var p=TAB=="p"?cp():mpd();
+if(!p||p.ph||(DRAFT&&DRAFT.id==p.id)){el.innerHTML="";return}
+fotoSub(p.id);var f=FOTOS[p.id];
+if(TAB=="p"){el.innerHTML=(f&&f.img)?'<div class="card"><h2>Foto do sofá pronto</h2><img src="'+f.img+'" style="width:100%;border-radius:10px;display:block" alt="Foto do sofá"><p class="s">'+dtm(f.t)+" · "+esc(f.n||"")+"</p></div>":"";return}
 var can=EDIT||ALLOWED.indexOf("mf")>=0;
 el.innerHTML='<div class="card"><h2>Foto do sofá</h2>'+(f&&f.img?'<img src="'+f.img+'" style="width:100%;border-radius:10px;display:block" alt="Foto do sofá"><p class="s">'+dtm(f.t)+" · "+esc(f.n||"")+"</p>":'<p class="s">'+(f===undefined?"Carregando…":"Nenhuma foto ainda.")+"</p>")
 +(can?'<div class="row np"><label class="bl p" style="cursor:pointer">'+(f&&f.img?"Trocar foto":"Enviar foto")+'<input type="file" id="fin" accept="image/*" hidden></label>'+(f&&f.img?'<button data-fdel="1">Remover</button>':"")+'</div><div class="warn" id="fmsg2"></div>':"")+"</div>"}
 function startData(){if(STARTED)return;STARTED=true;
 onSnapshot(collection(DB,"pedidos"),function(sn){var L=[];sn.forEach(function(d){var x=d.data();x.id=d.id;L.push(norm(x))});L.sort(function(a,b){return (a.cr||0)-(b.cr||0)});
+if(DRAFT&&!L.some(function(x){return x.id==DRAFT.id}))L.push(DRAFT);if(EDITING&&!DRAFT){var lc=S.pedidos.filter(function(x){return x.id==EDITING})[0];if(lc)L=L.map(function(x){return x.id==EDITING?lc:x})}
 if(!L.length)L=[{ph:true,id:"ph",nome:"Nenhum pedido ainda",mods:1,bracos:0,mw:130,mp:90,bw:15,bp:90,modelo:"",braco:"",obs:"",cr:0,cm:[],cb:[],st:{},sit:"aguard"}];
 if(JSON.stringify(L)==JSON.stringify(S.pedidos))return;
 S.pedidos=L;if(!L.some(function(q){return q.id==S.atual}))S.atual=L[L.length-1].id;render()},function(){$("sv").textContent="Sem permissão para ler os pedidos."});
