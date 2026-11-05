@@ -226,14 +226,15 @@ function catFind(L,name){var k=nm(name);return L.filter(function(x){return nm(x.
 function catList(coll){return coll=="modelos"?CAT.mod:CAT.br}
 function catById(coll,id){return catList(coll).filter(function(x){return x.id==id})[0]}
 function saveCat(coll,id){var c=catById(coll,id);if(c)setDoc(doc(DB,coll,id),{nome:c.nome,pecas:c.pecas})}
-function pcOf(it,mw,mult,sc){var f=(sc&&it.v!==0)?mw/100:1,l=num(it.l)*f,n=num(it.q)*mult,mdf=it.mat=="mdf",v=mdf?num(it.w)*l*n/10000:num(it.w)*2.5*l*n/1e6;return{l:l,n:n,mdf:mdf,v:v,t:mdf?fm2(v)+" m²":fm3(v)+" m³"}}
+function qfx(it,W){if(!it.fx)return num(it.q);var P=String(it.fx).split(";").map(function(x){var a=x.split("=");return[num(a[0]),num(a[1])]}).filter(function(a){return !isNaN(a[0])&&!isNaN(a[1])}).sort(function(a,b){return b[0]-a[0]});for(var i=0;i<P.length;i++)if(W>=P[i][0])return P[i][1];return 0}
+function pcOf(it,W,ref,mult){var k=ref?W/ref:1,m=it.v===0?0:(it.v===2?2:1),l=num(it.l)*(m==1?k:1),w=num(it.w)*(m==2?k:1),q=qfx(it,W),n=q*mult,mdf=it.mat=="mdf",v=mdf?w*l*n/10000:w*2.5*l*n/1e6;return{l:l,w:w,q:q,n:n,mdf:mdf,v:v,t:mdf?fm2(v)+" m²":fm3(v)+" m³"}}
 function cuts(){
 var p=mpd(),g=geo(p),mod=catFind(CAT.mod,p.modelo),br=catFind(CAT.br,p.braco),T={mdf:0,mad:0},sub={cm:{mdf:0,mad:0},cb:{mdf:0,mad:0}};
-function row(it,mw,mult,sc,k){var c=pcOf(it,mw,mult,sc);if(c.mdf){sub[k].mdf+=c.v;T.mdf+=c.v}else{sub[k].mad+=c.v;T.mad+=c.v}
-return '<div class="sw"><div class="fg"><b>'+(c.mdf?"MDF":"Madeira")+" · "+fm(num(it.w))+" × "+fm(c.l)+" cm</b><span>"+fm(num(it.q))+" × "+mult+" = "+fm(c.n)+" peça(s) · "+c.t+"</span></div></div>"}
+function row(it,W,ref,mult,k){var c=pcOf(it,W,ref,mult);if(c.mdf){sub[k].mdf+=c.v;T.mdf+=c.v}else{sub[k].mad+=c.v;T.mad+=c.v}
+return '<div class="sw"><div class="fg"><b>'+(c.mdf?"MDF":"Madeira")+" · "+fm(c.w)+" × "+fm(c.l)+" cm</b><span>"+fm(c.q)+" × "+mult+" = "+fm(c.n)+" peça(s) · "+c.t+"</span></div></div>"}
 var h='<div class="card"><h2>Corte de madeira - Módulo</h2><p class="s">Modelo: '+esc(p.modelo||"(não informado)")+" · "+g.m+" módulo(s) de "+fm(g.mw)+" cm</p>";
 if(!mod)h+='<p class="s">Modelo não encontrado no cadastro.'+(EDIT?" Cadastre na aba Modelos.":"")+"</p>";
-else{var grp=[],map={};(mod.pecas||[]).forEach(function(it){var n0=(it.loc||"").trim()||"Peça",key=nm(n0);if(!map[key]){map[key]={nm:n0,rows:[],mdf:0,mad:0};grp.push(map[key])}var G=map[key],c=pcOf(it,g.mw,g.m,true);G.rows.push(row(it,g.mw,g.m,true,"cm"));if(c.mdf)G.mdf+=c.v;else G.mad+=c.v});
+else{var grp=[],map={};(mod.pecas||[]).forEach(function(it){var n0=(it.loc||"").trim()||"Peça",key=nm(n0);if(!map[key]){map[key]={nm:n0,rows:[],mdf:0,mad:0};grp.push(map[key])}var G=map[key],c=pcOf(it,g.mw,100,g.m);G.rows.push(row(it,g.mw,100,g.m,"cm"));if(c.mdf)G.mdf+=c.v;else G.mad+=c.v});
 h+='<div class="lst">';grp.forEach(function(G){var key=p.id+":cm:"+nm(G.nm),open=EXP[key],sm=[];if(G.mdf)sm.push(fm2(G.mdf)+" m² MDF");if(G.mad)sm.push(fm3(G.mad)+" m³ madeira");
 h+='<button class="li" data-grp="'+esc(key)+'"><b>'+esc(G.nm)+'<span style="float:right;font-size:1rem;color:inherit">'+(open?"▾":"▸")+"</span></b><span>"+G.rows.length+" peça(s)"+(sm.length?" · "+sm.join(" · "):"")+"</span></button>";
 if(open)h+='<div style="margin:0 0 8px 10px">'+G.rows.join("")+"</div>"});
@@ -241,29 +242,34 @@ h+="</div>"+(grp.length?"":'<p class="s">Nenhuma peça cadastrada neste modelo.<
 h+="</div>";
 h+='<div class="card"><h2>Corte de madeira - Braços</h2><p class="s">Tipo de braço: '+esc(p.braco||"(não informado)")+" · "+g.b+" braço(s)</p>";
 if(!br)h+='<p class="s">Tipo de braço não encontrado no cadastro.'+(EDIT?" Cadastre na aba Modelos.":"")+"</p>";
-else{var ar=(br.pecas||[]).map(function(it){return row(it,g.mw,g.b,false,"cb")});h+='<div class="lst">'+(ar.join("")||'<p class="s">Nenhuma peça cadastrada.</p>')+"</div>"}
+else{var ar=(br.pecas||[]).map(function(it){return row(it,g.bw,20,g.b,"cb")});h+='<div class="lst">'+(ar.join("")||'<p class="s">Nenhuma peça cadastrada.</p>')+"</div>"}
 h+="</div>";
 function kv(a,b){return '<div class="kv"><span>'+a+"</span><b>"+b+"</b></div>"}
 h+='<div class="card v"><h2>Resumo de material</h2>'+kv("Módulos",fm2(sub.cm.mdf)+" m² MDF · "+fm3(sub.cm.mad)+" m³ madeira")+kv("Braços",fm2(sub.cb.mdf)+" m² MDF · "+fm3(sub.cb.mad)+" m³ madeira")+kv("Total de MDF",fm2(T.mdf)+" m²")+kv("Total de madeira",fm3(T.mad)+" m³")+"</div>";
 h+='<div class="row np"><button class="p" data-print="1">Imprimir</button></div>';
 $("cuts").innerHTML=h}
-function crow(coll,cid,i,it){var md=coll=="modelos";return '<div class="sw"><div class="bgE">Editar</div><div class="bgD"><button data-del2="'+coll+":"+cid+":"+i+'">Excluir</button></div><div class="fg" data-sw="'+coll+":"+cid+":"+i+'"><b>'+(md&&it.loc?esc(it.loc)+" · ":"")+(it.mat=="mdf"?"MDF":"Madeira")+" · "+fm(num(it.w))+" × "+fm(num(it.l))+" cm"+(md&&it.v===0?" (fixo)":"")+"</b><span>quantidade "+fm(num(it.q))+(md?" por módulo":" por braço")+"</span></div></div>"}
-function rowHtml(i,r){return '<div style="display:grid;grid-template-columns:1fr 1fr .8fr auto;gap:6px;margin-top:6px"><input data-fr="'+i+':w" inputmode="decimal" placeholder="Largura" value="'+esc(r.w)+'"><input data-fr="'+i+':l" inputmode="decimal" placeholder="Tamanho" value="'+esc(r.l)+'"><input data-fr="'+i+':q" inputmode="numeric" placeholder="Qtd" value="'+esc(r.q)+'">'+(FORM.coll=="modelos"?'<button data-vt="'+i+'">'+(r.v===0?"fixo":"↔")+"</button>":"<span></span>")+"</div>"}
+function crow(coll,cid,i,it){var md=coll=="modelos",fx=it.v===0?" (fixo)":(!md&&it.v===2?" (largura acompanha)":"");
+return '<div class="sw"><div class="bgE">Editar</div><div class="bgD"><button data-del2="'+coll+":"+cid+":"+i+'">Excluir</button></div><div class="fg" data-sw="'+coll+":"+cid+":"+i+'"><b>'+(md&&it.loc?esc(it.loc)+" · ":"")+(it.mat=="mdf"?"MDF":"Madeira")+" · "+fm(num(it.w))+" × "+fm(num(it.l))+" cm"+fx+"</b><span>"+(it.fx?"quantidade por largura: "+esc(it.fx):"quantidade "+fm(num(it.q))+(md?" por módulo":" por braço"))+"</span></div></div>"}
+function grpHtml(coll,c){if(coll!="modelos")return (c.pecas||[]).map(function(it,i){return crow(coll,c.id,i,it)}).join("");
+var grp=[],map={};(c.pecas||[]).forEach(function(it,i){var n0=(it.loc||"").trim()||"Peça",k=nm(n0);if(!map[k]){map[k]={nm:n0,items:[]};grp.push(map[k])}map[k].items.push([i,it])});
+return grp.map(function(G){var key="cg:"+c.id+":"+nm(G.nm),open=EXP[key];return '<button class="li" data-cgrp="'+esc(key)+'"><b>'+esc(G.nm)+'<span style="float:right;font-size:1rem;color:inherit">'+(open?"▾":"▸")+"</span></b><span>"+G.items.length+" peça(s)</span></button>"+(open?'<div style="margin:0 0 8px 10px">'+G.items.map(function(x){return crow(coll,c.id,x[0],x[1])}).join("")+"</div>":"")}).join("")}
+function vlab(r){return FORM.coll=="modelos"?(r.v===0?"fixo":"↔"):(r.v===0?"fixo":r.v===2?"↔ larg.":"↔ comp.")}
+function rowHtml(i,r){return '<div style="display:grid;grid-template-columns:1fr 1fr .8fr auto;gap:6px;margin-top:6px"><input data-fr="'+i+':w" inputmode="decimal" placeholder="Largura" value="'+esc(r.w)+'"><input data-fr="'+i+':l" inputmode="decimal" placeholder="Tamanho" value="'+esc(r.l)+'"><input data-fr="'+i+':q" inputmode="numeric" placeholder="Qtd" value="'+esc(r.q)+'">'+'<button data-vt="'+i+'">'+vlab(r)+"</button>"+"</div>"}
 function formHtml(coll){var v=FORM.v,mad=v.mat=="mad",md=coll=="modelos";
 return '<div class="card v np" style="margin:10px 0 0"><div class="row"><button class="ch'+(mad?"":" on")+'" data-mat="mdf">MDF</button><button class="ch'+(mad?" on":"")+'" data-mat="mad">Madeira</button></div>'
 +(md?'<label>Local (encosto, caixa, assento...)</label><input data-fd="loc" list="lloc" value="'+esc(v.loc||"")+'"><datalist id="lloc"><option value="Encosto"><option value="Caixa"><option value="Assento"></datalist>':"")
-+'<label style="margin-top:8px">Largura, tamanho (cm) e quantidade'+(md?" por módulo de 1 m (100 cm). O botão ↔ faz o tamanho acompanhar a largura do módulo; toque nele para deixar fixo.":" por braço.")+'</label><div id="frows">'+FORM.rows.map(function(r,i){return rowHtml(i,r)}).join("")+"</div>"
-+'<div class="warn" id="fmsg"></div><div class="row" style="margin-top:8px"><button class="p" data-fa="save">'+(FORM.i<0?"Adicionar":"Salvar")+'</button><button data-fa="cancel">Cancelar</button>'+(FORM.i>=0?'<button data-fa="del">Excluir</button>':"")+"</div></div>"}
++'<label style="margin-top:8px">Largura, tamanho (cm) e quantidade'+(md?" por módulo de 1 m (100 cm). O botão ↔ faz o tamanho acompanhar a largura do módulo; toque nele para deixar fixo.":" por braço, para um braço de 20 cm de largura. O botão ao lado muda como a peça acompanha a largura do braço: ↔ comp. (o comprimento), ↔ larg. (a largura da peça) ou fixo.")+'</label><div id="frows">'+FORM.rows.map(function(r,i){return rowHtml(i,r)}).join("")+"</div>"
++'<label style="margin-top:8px">Quantidade por largura (opcional)</label><input data-fd="fx" placeholder="ex.: 15=2; 10=1" value="'+esc(v.fx||"")+'"><div class="s">Escreva largura mínima=quantidade, separados por ponto e vírgula. Ex.: 15=2; 10=1 significa: a partir de 15 cm usa 2, a partir de 10 cm usa 1, abaixo disso não usa. Vale para a largura '+(md?"do módulo":"do braço")+'.</div><div class="warn" id="fmsg"></div><div class="row" style="margin-top:8px"><button class="p" data-fa="save">'+(FORM.i<0?"Adicionar":"Salvar")+'</button><button data-fa="cancel">Cancelar</button>'+(FORM.i>=0?'<button data-fa="del">Excluir</button>':"")+"</div></div>"}
 function catUI(){var h="";
 [["modelos","Modelos de sofá",CAT.mod,"Cadastre as madeiras para um módulo de 1 m (100 cm)."],["bracos","Tipos de braço",CAT.br,"Cadastre as madeiras de um braço."]].forEach(function(S2){var coll=S2[0];
 h+='<div class="card"><h2>'+S2[1]+'</h2><p class="s">'+S2[3]+'</p><div class="row np"><input id="new_'+coll+'" placeholder="Nome (ex.: '+(coll=="modelos"?"Village":"Quadrado")+')" style="flex:1"><button class="p" data-cadd="'+coll+'">Adicionar</button></div><div class="lst">';
 S2[2].forEach(function(c){var key="cat:"+c.id,open=EXP[key];
 h+='<button class="li" data-cgrp="'+key+'"><b>'+esc(c.nome)+'<span style="float:right;font-size:1rem;color:inherit">'+(open?"▾":"▸")+"</span></b><span>"+(c.pecas||[]).length+" peça(s)</span></button>";
-if(open)h+='<div style="margin:0 0 10px 10px">'+(c.pecas||[]).map(function(it,i){return crow(coll,c.id,i,it)}).join("")+'<div class="row np" style="margin-top:6px"><button class="p" data-add="'+coll+":"+c.id+'">+ peça</button><button data-cdel="'+coll+":"+c.id+'">Excluir '+(coll=="modelos"?"modelo":"tipo")+"</button></div>"+(FORM&&FORM.cid==c.id?formHtml(coll):"")+"</div>"});
+if(open)h+='<div style="margin:0 0 10px 10px">'+grpHtml(coll,c)+'<div class="row np" style="margin-top:6px"><button class="p" data-add="'+coll+":"+c.id+'">+ peça</button><button data-cdel="'+coll+":"+c.id+'">Excluir '+(coll=="modelos"?"modelo":"tipo")+"</button></div>"+(FORM&&FORM.cid==c.id?formHtml(coll):"")+"</div>"});
 h+="</div></div>"});
 $("tabD").innerHTML=h}
 function printCuts(){var p=mpd(),mod=catFind(CAT.mod,p.modelo);if(mod)(mod.pecas||[]).forEach(function(it){EXP[p.id+":cm:"+nm((it.loc||"").trim()||"Peça")]=true});FORM=null;render();setTimeout(function(){try{window.print()}catch(e){}},150)}
-function editItem(coll,cid,i){var c=catById(coll,cid),it=c&&c.pecas[i];if(!it)return;FORM={coll:coll,cid:cid,i:i,v:{loc:it.loc||"",mat:it.mat},rows:[{w:it.w,l:it.l,q:it.q,v:it.v===0?0:1}]};render();var el=$("frows");if(el&&el.scrollIntoView)el.scrollIntoView({block:"center",behavior:"smooth"})}
+function editItem(coll,cid,i){var c=catById(coll,cid),it=c&&c.pecas[i];if(!it)return;FORM={coll:coll,cid:cid,i:i,v:{loc:it.loc||"",mat:it.mat,fx:it.fx||""},rows:[{w:it.w,l:it.l,q:it.q,v:it.v===0?0:(it.v===2?2:1)}]};render();var el=$("frows");if(el&&el.scrollIntoView)el.scrollIntoView({block:"center",behavior:"smooth"})}
 var SW=null;
 document.addEventListener("pointerdown",function(e){if(!EDIT)return;var fg=e.target.closest&&e.target.closest(".fg[data-sw]");if(!fg)return;
 document.querySelectorAll(".fg[data-sw]").forEach(function(x){if(x!==fg){x.style.transform="";x.removeAttribute("data-open")}});
@@ -295,7 +301,7 @@ var gr=g("data-grp");if(gr){EXP[gr]=!EXP[gr];render();return true}
 var cg=g("data-cgrp");if(cg){EXP[cg]=!EXP[cg];FORM=null;render();return true}
 var ca=g("data-cadd");if(ca){if(EDIT){var inp=$("new_"+ca),nv=inp.value.trim();if(nv){var id="c"+Date.now();setDoc(doc(DB,ca,id),{nome:nv,pecas:[]});inp.value="";EXP["cat:"+id]=true}}return true}
 var cd=g("data-cdel");if(cd){if(EDIT&&confirm("Excluir? Isso não afeta pedidos já lançados, mas eles deixam de calcular as madeiras.")){var qd=cd.split(":");deleteDoc(doc(DB,qd[0],qd[1]));FORM=null}return true}
-var vt=g("data-vt");if(vt!==null&&FORM){var rr=FORM.rows[+vt];rr.v=rr.v===0?1:0;render();return true}
+var vt=g("data-vt");if(vt!==null&&FORM){var rr=FORM.rows[+vt];rr.v=FORM.coll=="modelos"?(rr.v===0?1:0):(rr.v===0?1:rr.v===2?0:2);render();return true}
 var d2=g("data-del2");if(d2){if(EDIT){var q2=d2.split(":"),c2=catById(q2[0],q2[1]);if(c2){c2.pecas.splice(+q2[2],1);saveCat(q2[0],q2[1])}render()}return true}
 var a=g("data-add");if(a){if(EDIT){var q3=a.split(":");FORM={coll:q3[0],cid:q3[1],i:-1,v:{loc:"",mat:"mdf"},rows:[{w:"",l:"",q:1,v:1}]};render()}return true}
 var m=g("data-mat");if(m){if(FORM){FORM.v.mat=m;render()}return true}
@@ -303,10 +309,10 @@ var fa=g("data-fa");
 if(fa&&FORM){var c3=catById(FORM.coll,FORM.cid);if(!c3){FORM=null;render();return true}
 if(fa=="cancel"){FORM=null;render();return true}
 if(fa=="del"){c3.pecas.splice(FORM.i,1);saveCat(FORM.coll,FORM.cid);FORM=null;render();return true}
-var v=FORM.v,its=[];FORM.rows.forEach(function(r){var w=num(r.w),l=num(r.l);if(w>0&&l>0)its.push({loc:FORM.coll=="modelos"?(v.loc||""):"",mat:v.mat,w:w,l:l,q:num(r.q)||1,v:r.v===0?0:1})});
+var v=FORM.v,its=[];FORM.rows.forEach(function(r){var w=num(r.w),l=num(r.l);if(w>0&&l>0)its.push({loc:FORM.coll=="modelos"?(v.loc||""):"",mat:v.mat,w:w,l:l,q:num(r.q)||1,v:r.v===0?0:(r.v===2?2:1),fx:(v.fx||"").trim()})});
 if(!its.length){$("fmsg").textContent="Informe a largura e o tamanho.";return true}
 if(FORM.i<0)its.forEach(function(it){c3.pecas.push(it)});else c3.pecas[FORM.i]=its[0];
-saveCat(FORM.coll,FORM.cid);FORM=null;render();return true}
+if(FORM.coll=="modelos")EXP["cg:"+FORM.cid+":"+nm((v.loc||"").trim()||"Peça")]=true;saveCat(FORM.coll,FORM.cid);FORM=null;render();return true}
 return false}
 document.addEventListener("input",function(e){var t=e.target,d=t.getAttribute&&t.getAttribute("data-fd"),r=t.getAttribute&&t.getAttribute("data-fr");
 if(d&&FORM)FORM.v[d]=t.value;
