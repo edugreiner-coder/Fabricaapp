@@ -190,9 +190,13 @@ function hs(){if(["mc","es","cc","mf"].indexOf(TAB)<0)return "";var p=mpd(),I=in
 if(s=="prod"&&lp)return (I.pauses?"Retomado ":"Produção desde ")+dtm(lp.t)+(lp.n?" · "+lp.n:"");
 if(s=="pause"){var l=I.E[I.E.length-1];return l?"Pausado "+dtm(l.t):"Pausado"}
 if(s=="fin"&&I.fim)return "Finalizado "+dtm(I.fim.t);return ""}
+function prog(p){var sd=p.st||{},q=sitOf(p),N=[["mc","Madeira"],["es","Espumagem"],["cc","Corte e costura"]],cur=null;
+N.forEach(function(x){if(cur===null&&sd[x[0]]!="fin")cur=x[0]});
+var tx=N.map(function(x){var v=sd[x[0]]||"",c=v=="fin"?"#2e9e5b":v=="prod"?"#2f7de1":v=="pause"?"#d99a1f":"var(--mut)";return '<span style="color:'+c+(x[0]==cur?";font-weight:700":"")+'">'+x[1]+(v=="fin"?" ✓":"")+"</span>"}).join(" › ");
+return '<div class="row" style="margin:0 0 6px"><span class="bd2" style="background:'+q.c+'">'+esc(q.t)+'</span></div><div class="s" style="margin:0 0 10px">'+tx+"</div>"}
 function stat(){var p=mpd(),s=(p.st||{})[TAB]||"",lb={"":"Não iniciado",prod:"Em produção",pause:"Pausado",fin:"Finalizado"}[s],I=info(p,TAB);
 var ev=I.E.slice(-4).map(function(e){return '<div class="s">'+LB[e.a]+" · "+dtm(e.t)+" · "+esc(e.n||"")+"</div>"}).join("");
-$("stbox").innerHTML="<h2>"+ST[TAB]+'</h2><div class="row" style="margin:0 0 8px">'+ico(s,22)+"<b>"+lb+"</b></div>"+(canStage()?'<div class="row np">'+[["prod","sb","Produção"],["pause","sa","Pausar"],["fin","sg","Finalizado"]].map(function(x){return '<button class="ch '+x[1]+(s==x[0]?" on":"")+'" data-st="'+x[0]+'">'+ico(x[0],16)+" "+x[2]+"</button>"}).join("")+"</div>":"")+ev}
+$("stbox").innerHTML="<h2>"+ST[TAB]+'</h2>'+(TAB=="mf"?prog(p):"")+'<div class="row" style="margin:0 0 8px">'+ico(s,22)+"<b>"+lb+"</b></div>"+(canStage()?'<div class="row np">'+[["prod","sb","Produção"],["pause","sa","Pausar"],["fin","sg","Finalizado"]].map(function(x){return '<button class="ch '+x[1]+(s==x[0]?" on":"")+'" data-st="'+x[0]+'">'+ico(x[0],16)+" "+x[2]+"</button>"}).join("")+"</div>":"")+ev}
 function rng(){var s=new Date();s.setHours(0,0,0,0);var t0=s.getTime();if(RF=="y")return[t0-86400000,t0-1];s.setDate(s.getDate()-((+RF||1)-1));return[s.getTime(),Date.now()]}
 function repUI(){var el=$("rep");if(!EDIT||["p","mc","es","cc","mf"].indexOf(TAB)<0){el.innerHTML="";return}
 var R=rng(),inr=function(t){return !!t&&t>=R[0]&&t<=R[1]},rows=[],per={};
