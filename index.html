@@ -408,7 +408,7 @@ h='<div class="s">Lançado '+dtm(cr?cr.t:p.cr)+" · "+esc(cr?cr.n:(p.por||""))+"
 E.filter(function(e){return e.a!="criado"}).slice(-3).forEach(function(e){h+='<div class="s">'+LB[e.a]+" "+dtm(e.t)+" · "+esc(e.n||"")+"</div>"})}
 $("phist").innerHTML=h}
 function fotoSub(id){if(FID==id)return;if(FUN)FUN();FID=id;FUN=onSnapshot(doc(DB,"fotos",id),function(sn){FOTOS[id]=sn.exists()?sn.data():null;fotoUI()},function(){FOTOS[id]=null;fotoUI()})}
-function fotoUI(){var A=$("foto"),B=$("fotoP");if(TAB!="mf"&&TAB!="p"){A.innerHTML="";B.innerHTML="";return}
+function fotoUI(){var A=$("foto"),B=$("fotoP");if(!DB||!ME||(TAB!="mf"&&TAB!="p")){A.innerHTML="";B.innerHTML="";return}
 var el=TAB=="p"?B:A;(TAB=="p"?A:B).innerHTML="";var p=TAB=="p"?cp():mpd();
 if(!p||p.ph||(DRAFT&&DRAFT.id==p.id)){el.innerHTML="";return}
 fotoSub(p.id);var f=FOTOS[p.id];
