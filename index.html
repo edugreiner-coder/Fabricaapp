@@ -104,6 +104,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div class="card" id="stbox"></div>
 <div class="card"><h2>Pedido</h2><div id="det"></div></div>
 <div class="card v"><h2>Vista de cima</h2><svg id="all2" viewBox="0 0 300 100"></svg></div>
+<div id="foto"></div>
 <div id="cuts"></div>
 </div>
 
@@ -269,6 +270,7 @@ else{fg.style.transform="";fg.removeAttribute("data-open")}}
 document.addEventListener("pointerup",swEnd);document.addEventListener("pointercancel",swEnd);
 function cutClick(b){
 var g=function(n){return b.getAttribute(n)};
+if(g("data-fdel")){var pf=mpd();if(pf&&confirm("Remover a foto deste pedido?")){FOTOS[pf.id]=null;deleteDoc(doc(DB,"fotos",pf.id));fotoUI()}return true}
 var ee=g("data-eqed");if(ee){EQED=ee;eqUI();return true}
 if(g("data-eqcx")){EQED=null;eqUI();return true}
 var es=g("data-eqsv");if(es){var ab2=[].slice.call(document.querySelectorAll("#eqedit input[data-ab]:checked")).map(function(x){return x.getAttribute("data-ab")}),dn2=ab2.indexOf("dono")>=0;ab2=ab2.filter(function(x){return x!="dono"});var uu=UL.filter(function(x){return x.id==es})[0];if(uu)setDoc(doc(DB,"Users",es),{Nome:uu.Nome||"",Role:dn2?"dono":"equipe",Abas:ab2});EQED=null;return true}
@@ -307,7 +309,7 @@ if(FORM.i<0&&i==FORM.rows.length-1&&num(L.w)>0&&num(L.l)>0){FORM.rows.push({w:""
 
 function render(){
 var p=cp();
-$("bd").textContent=(ME?ME.nome:"")+(navigator.onLine?"":" · offline");$("ttl").textContent=TAB=="eq"?"Equipe":TAB=="md"?"Modelos":tt(TAB=="p"?p:mpd());sitR(p);avisos();$("hsub").textContent=hs();repUI();
+$("bd").textContent=(ME?ME.nome:"")+(navigator.onLine?"":" · offline");$("ttl").textContent=TAB=="eq"?"Equipe":TAB=="md"?"Modelos":tt(TAB=="p"?p:mpd());sitR(p);avisos();$("hsub").textContent=hs();repUI();fotoUI();
 $("tabP").hidden=TAB!="p";$("tabM").hidden=TAB=="p"||TAB=="eq"||TAB=="md"||TAB=="en";$("tabN").hidden=TAB!="en";$("tabE").hidden=TAB!="eq";$("tabD").hidden=TAB!="md";
 document.querySelectorAll(".tb").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-t")==TAB)});
 $("nv").hidden=!EDITP;$("ex").hidden=!EDIT;
@@ -346,6 +348,7 @@ $("sh").addEventListener("click",function(){var p=cp(),st=$("sh2");
 if(PNG){doShare(p,PNG);return}
 st.textContent="Gerando imagem…";toPng(p,function(b){st.textContent="";if(!b){st.textContent="Não foi possível gerar a imagem.";return}doShare(p,b)})});
 document.addEventListener("change",function(e){var t=e.target,k=t.getAttribute&&t.getAttribute("data-k");
+if(t.id=="fin"&&t.files&&t.files[0]){upFoto(t.files[0]);t.value="";return}
 var en=t.getAttribute&&t.getAttribute("data-en");if(en){if(EDITEN()){var q0=mpd();if(!q0.ph){q0.en=q0.en||{};q0.en[en]=t.value;save();render()}}return}
 if(t.id=="d1"||t.id=="d2"){D1=$("d1").value;D2=$("d2").value;render();return}if(!k||!EDITP)return;var p=cp();if(p.ph)return;p[k]=t.getAttribute("data-n")?num(t.value):t.value;render();save()});
 document.addEventListener("input",function(e){var t=e.target;if(t.getAttribute&&t.getAttribute("data-n")&&EDITP&&!cp().ph){cp()[t.getAttribute("data-k")]=num(t.value);drawAll()}});
@@ -378,6 +381,18 @@ function eqUI(){var h="";UL.forEach(function(u){var dn=String(u.Role).toLowerCas
 h+='<div class="kv" style="align-items:center"><span><strong>'+esc(u.Nome)+"</strong><br>"+esc(tx)+"</span><span>"+(me?"":'<button data-eqed="'+u.id+'">Editar</button> <button data-rm="'+u.id+'">Remover</button>')+"</span></div>";
 if(EQED==u.id)h+='<div id="eqedit" style="padding:8px 0">'+abHtml(u.Role,ab)+'<div class="row" style="margin-top:6px"><button class="p" data-eqsv="'+u.id+'">Salvar</button><button data-eqcx="1">Cancelar</button></div></div>'});
 $("eqlist").innerHTML=h}
+var FOTOS={},FREQ={};
+function compress(file,M,q,cb){var im=new Image(),u=URL.createObjectURL(file);im.onload=function(){var k=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);cb(c.toDataURL("image/jpeg",q))};im.onerror=function(){cb(null)};im.src=u}
+function upFoto(file){var p=mpd();if(!p||p.ph)return;var m=$("fmsg2");if(m)m.textContent="Enviando…";
+compress(file,1100,.72,function(d){if(d&&d.length>800000)return compress(file,800,.6,fin);fin(d)});
+function fin(d){if(!d||d.length>900000){if($("fmsg2"))$("fmsg2").textContent="Não foi possível usar essa foto. Tente outra.";return}
+var f={img:d,t:Date.now(),n:ME?ME.nome:""};FOTOS[p.id]=f;fotoUI();
+setDoc(doc(DB,"fotos",p.id),f).catch(function(){FOTOS[p.id]=null;fotoUI();if($("fmsg2"))$("fmsg2").textContent="Sem permissão para enviar a foto."})}}
+function fotoUI(){var el=$("foto");if(TAB!="mf"){el.innerHTML="";return}var p=mpd();if(!p||p.ph){el.innerHTML="";return}
+var f=FOTOS[p.id];if(f===undefined&&!FREQ[p.id]){FREQ[p.id]=1;getDoc(doc(DB,"fotos",p.id)).then(function(s){FOTOS[p.id]=s.exists()?s.data():null;fotoUI()}).catch(function(){FOTOS[p.id]=null;fotoUI()})}
+var can=EDIT||ALLOWED.indexOf("mf")>=0;
+el.innerHTML='<div class="card"><h2>Foto do sofá</h2>'+(f&&f.img?'<img src="'+f.img+'" style="width:100%;border-radius:10px;display:block" alt="Foto do sofá"><p class="s">'+dtm(f.t)+" · "+esc(f.n||"")+"</p>":'<p class="s">'+(f===undefined?"Carregando…":"Nenhuma foto ainda.")+"</p>")
++(can?'<div class="row np"><label class="bl p" style="cursor:pointer">'+(f&&f.img?"Trocar foto":"Enviar foto")+'<input type="file" id="fin" accept="image/*" hidden></label>'+(f&&f.img?'<button data-fdel="1">Remover</button>':"")+'</div><div class="warn" id="fmsg2"></div>':"")+"</div>"}
 function startData(){if(STARTED)return;STARTED=true;
 onSnapshot(collection(DB,"pedidos"),function(sn){var L=[];sn.forEach(function(d){var x=d.data();x.id=d.id;L.push(norm(x))});L.sort(function(a,b){return (a.cr||0)-(b.cr||0)});
 if(!L.length)L=[{ph:true,id:"ph",nome:"Nenhum pedido ainda",mods:1,bracos:0,mw:130,mp:90,bw:15,bp:90,modelo:"",braco:"",obs:"",cr:0,cm:[],cb:[],st:{},sit:"aguard"}];
