@@ -22,7 +22,7 @@ h1{font-size:1.3rem;margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;
 .row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
 .g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 label{display:block;font-size:.8rem;color:var(--mut)}
-input,textarea{width:100%;font:inherit;padding:9px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--fg);box-sizing:border-box}
+input,select,textarea{width:100%;font:inherit;padding:9px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--fg);box-sizing:border-box}
 textarea{min-height:70px;resize:vertical}
 button{font:inherit;font-size:.8rem;padding:5px 10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);cursor:pointer}
 button.p{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
@@ -79,8 +79,8 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <h3>Medida de cada braço (cm)</h3>
 <div><label for="bw">Largura</label><input id="bw" data-k="bw" data-n="1" inputmode="decimal"></div>
 <div class="g2" style="margin-top:12px">
-<div><label for="modelo">Modelo</label><input id="modelo" data-k="modelo" list="lm"><datalist id="lm"></datalist></div>
-<div><label for="braco">Tipo de braço</label><input id="braco" data-k="braco" list="lb"><datalist id="lb"></datalist></div>
+<div><label for="modelo">Modelo</label><select id="modelo" data-k="modelo"></select></div>
+<div><label for="braco">Tipo de braço</label><select id="braco" data-k="braco"></select></div>
 </div>
 <label for="obs" style="margin-top:12px">Observação</label><textarea id="obs" data-k="obs"></textarea>
 <div class="row np" style="margin-top:12px"><button class="p" id="edb" hidden>Editar</button><button class="p" id="svb" hidden>Salvar</button><button id="cxb" hidden>Cancelar</button><button id="ex" hidden>Excluir pedido</button></div><p class="s" id="sv"></p>
@@ -347,6 +347,10 @@ if(d&&FORM)FORM.v[d]=t.value;
 if(r&&FORM){var a=r.split(":"),i=+a[0];FORM.rows[i][a[1]]=t.value;var L=FORM.rows[FORM.rows.length-1];
 if(FORM.i<0&&i==FORM.rows.length-1&&num(L.w)>0&&num(L.l)>0){FORM.rows.push({w:"",l:"",q:1,v:1});$("frows").insertAdjacentHTML("beforeend",rowHtml(FORM.rows.length-1,FORM.rows[FORM.rows.length-1]))}}});
 
+function fillSel(id,list,val){var el=$(id),h='<option value="">Selecione…</option>',ok=false;
+list.forEach(function(c){if(nm(c.nome)==nm(val))ok=true;h+='<option value="'+esc(c.nome)+'">'+esc(c.nome)+"</option>"});
+if(val&&!list.some(function(c){return c.nome==val})){h+='<option value="'+esc(val)+'">'+esc(val)+" (não cadastrado)</option>"}
+el.innerHTML=h;el.value=val||""}
 function render(){
 var p=cp();
 $("bd").textContent=(ME?ME.nome:"")+(navigator.onLine?"":" · offline");$("ttl").textContent=TAB=="eq"?"Equipe":TAB=="md"?"Modelos":tt(TAB=="p"?p:mpd());sitR(p);phR(p);avisos();$("hsub").textContent=hs();repUI();fotoUI();
@@ -355,7 +359,7 @@ document.querySelectorAll(".tb").forEach(function(b){b.classList.toggle("on",b.g
 $("nv").hidden=!EDITP;var edn=EDITP&&EDITING==p.id&&!p.ph;$("edb").hidden=!(EDITP&&!edn&&!p.ph);$("svb").hidden=!edn;$("cxb").hidden=!edn;$("ex").hidden=!(EDIT&&!edn&&!p.ph);
 document.querySelectorAll("[data-k]").forEach(function(e){e.value=p[e.getAttribute("data-k")];e.disabled=!edn});
 function opts(k){var u={};S.pedidos.forEach(function(q){if(q[k])u[q[k]]=1});return Object.keys(u).map(function(v){return '<option value="'+esc(v)+'">'}).join("")}
-$("lm").innerHTML=opts("modelo")+CAT.mod.map(function(c){return '<option value="'+esc(c.nome)+'">'}).join("");$("lb").innerHTML=opts("braco")+CAT.br.map(function(c){return '<option value="'+esc(c.nome)+'">'}).join("");
+fillSel("modelo",CAT.mod,p.modelo);fillSel("braco",CAT.br,p.braco);
 drawAll();
 if(TAB=="md")catUI();if(TAB=="en")detN();if(TAB!="p"&&TAB!="eq"&&TAB!="md"&&TAB!="en"){detM();$("cuts").hidden=TAB!="cm";if(TAB=="cm")cuts();$("stbox").hidden=TAB=="cm";if(TAB!="cm")stat()}lista($("lst"),TAB!="p"?(MSEL||S.atual):p.id);chipsR()}
 function save(){var p=TAB=="p"?cp():mpd();if(!p||p.ph||!DB)return;var id=p.id,tb=TAB;$("sv").textContent="";clearTimeout(tms[id+tb]);
@@ -396,7 +400,7 @@ document.addEventListener("click",function(e){var b=e.target.closest&&e.target.c
 if(cutClick(b))return;var tab=b.getAttribute("data-t"),pk=b.getAttribute("data-pick"),f=b.getAttribute("data-f");if(f){FIL=f;render();return}
 if(tab){FORM=null;if(tab!="p"&&TAB=="p")MSEL=S.atual;TAB=tab;render();return}
 if(pk){FORM=null;if(DRAFT&&pk!=DRAFT.id){S.pedidos=S.pedidos.filter(function(x){return x.id!=DRAFT.id});DRAFT=null}EDITING=null;if(TAB!="p"){MSEL=pk}else{S.atual=pk}render();openD(false)}});
-$("nv").addEventListener("click",function(){var n=NP();n.nome="";n.por=ME?ME.nome:"";DRAFT=n;EDITING=n.id;S.pedidos=S.pedidos.filter(function(x){return !x.ph&&(!DRAFT||x.id!=DRAFT.id||x===n)});S.pedidos.push(n);S.atual=n.id;TAB="p";$("sv").textContent="";render();openD(false)});
+$("nv").addEventListener("click",function(){var n=NP();n.nome="";var fm0=catFind(CAT.mod,"Village"),fb0=catFind(CAT.br,"Quadrado");n.modelo=fm0?fm0.nome:"";n.braco=fb0?fb0.nome:"";n.por=ME?ME.nome:"";DRAFT=n;EDITING=n.id;S.pedidos=S.pedidos.filter(function(x){return !x.ph&&(!DRAFT||x.id!=DRAFT.id||x===n)});S.pedidos.push(n);S.atual=n.id;TAB="p";$("sv").textContent="";render();openD(false)});
 $("edb").addEventListener("click",function(){var p=cp();if(!p||p.ph||!EDITP)return;EDITING=p.id;ORIG=JSON.stringify(p);$("sv").textContent="";render()});
 $("cxb").addEventListener("click",function(){var p=cp();if(!p)return;
 if(DRAFT&&DRAFT.id==p.id){S.pedidos=S.pedidos.filter(function(x){return x.id!=p.id});DRAFT=null;ensurePh();S.atual=S.pedidos[S.pedidos.length-1].id}
