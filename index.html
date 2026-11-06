@@ -389,7 +389,7 @@ $("tabP").hidden=TAB!="p";$("tabM").hidden=TAB=="p"||TAB=="eq"||TAB=="md"||TAB==
 document.querySelectorAll(".tb").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-t")==TAB)});
 $("nv").hidden=!EDITP;var edn=EDITP&&EDITING==p.id&&!p.ph;$("edb").hidden=!(EDITP&&!edn&&!p.ph);$("svb").hidden=!edn;$("cxb").hidden=!edn;$("ex").hidden=!(EDIT&&!edn&&!p.ph);
 var rf=p.tp=="ref";$("tpbar").innerHTML='<button class="ch'+(!rf?" on":"")+'" data-tp="novo"'+(edn?"":" disabled")+'>Sofá novo</button><button class="ch'+(rf?" on":"")+'" data-tp="ref"'+(edn?"":" disabled")+'>Reforma</button>';
-$("novoBox").hidden=rf;$("vh").hidden=rf;$("all").hidden=rf;$("wn").hidden=rf;$("tecN").innerHTML=rf?"":tecHtml(p,edn);$("tecR").innerHTML=rf?tecHtml(p,edn):"";
+$("novoBox").hidden=rf;$("vh").hidden=rf;if(rf)$("all").setAttribute("hidden","");else $("all").removeAttribute("hidden");$("wn").hidden=rf;$("tecN").innerHTML=rf?"":tecHtml(p,edn);$("tecR").innerHTML=rf?tecHtml(p,edn):"";
 document.querySelectorAll("[data-k]").forEach(function(e){e.value=p[e.getAttribute("data-k")];e.disabled=!edn});
 function opts(k){var u={};S.pedidos.forEach(function(q){if(q[k])u[q[k]]=1});return Object.keys(u).map(function(v){return '<option value="'+esc(v)+'">'}).join("")}
 fillSel("modelo",CAT.mod,p.modelo);fillSel("braco",CAT.br,p.braco);
