@@ -58,7 +58,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 </style>
 </head>
 <body>
-<div class="top"><div class="row" style="margin:0;flex-wrap:nowrap;min-width:0;flex:1"><button class="mb np" id="mb" aria-label="Pedidos">☰</button><div style="min-width:0"><h1 id="ttl">Pedido</h1><div id="hsub" style="font-size:.72rem;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div></div><span class="bd" id="bd">carregando…</span></div>
+<div class="top"><div class="row" style="margin:0;flex-wrap:nowrap;min-width:0;flex:1"><button class="mb np" id="mb" aria-label="Pedidos">☰</button><div style="min-width:0"><h1 id="ttl">Pedido</h1><div id="hsub" style="font-size:.72rem;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div></div><span style="display:flex;gap:6px;align-items:center"><button id="cfg" class="np" hidden aria-label="Aparência" style="background:rgba(255,255,255,.25);border-color:transparent;color:#fff;font-size:1rem;padding:3px 9px">⚙</button><span class="bd" id="bd">carregando…</span></span></div>
 <div class="tabs np"><button class="tb on" data-t="p">Pedidos</button><button class="tb" data-t="cm">Corte madeira</button><button class="tb" data-t="mc">Marcenaria</button><button class="tb" data-t="es">Espumagem</button><button class="tb" data-t="cc">Corte e costura</button><button class="tb" data-t="mf">Montagem e finalização</button><button class="tb" data-t="en" hidden>Entrega</button><button class="tb" data-t="md" hidden>Modelos</button><button class="tb" data-t="eq" hidden>Equipe</button></div>
 
 <div id="login" style="position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
@@ -128,6 +128,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div class="lst" id="lst"></div>
 <div class="row" style="margin-top:12px"><button id="syn">Sincronizar</button><button id="out">Sair</button></div><p class="s" id="synm"></p>
 </aside>
+<div id="cfgov" class="np" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;display:flex;align-items:flex-end;justify-content:center"><div id="cfgsh" style="background:var(--card);color:var(--fg);width:100%;max-width:760px;max-height:88vh;overflow:auto;border-radius:16px 16px 0 0;padding:14px"></div></div>
 <script type="module">
 import {initializeApp,getApps} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,createUserWithEmailAndPassword} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -535,6 +536,7 @@ if(!L.length)L=[{ph:true,id:"ph",nome:"Nenhum pedido ainda",mods:1,bracos:0,mw:1
 if(JSON.stringify(L)==JSON.stringify(S.pedidos))return;
 S.pedidos=L;if(!L.some(function(q){return q.id==S.atual}))S.atual=L[L.length-1].id;render()},function(){$("sv").textContent="Sem permissão para ler os pedidos."});
 ["modelos","bracos","tecidos"].forEach(function(coll){onSnapshot(collection(DB,coll),function(sn){var L=[];sn.forEach(function(d){var x=d.data();L.push({id:d.id,nome:x.nome||"",pecas:x.pecas||[],tams:Array.isArray(x.tams)?x.tams.map(function(t){return{w:num(t.w),pecas:t.pecas||[]}}):undefined})});L.sort(function(a,b){return a.nome.localeCompare(b.nome)});if(coll=="modelos")CAT.mod=L;else if(coll=="bracos")CAT.br=L;else CAT.tec=L;render()},function(){})});
+temaSub();
 if(ROLE=="dono")onSnapshot(collection(DB,"Users"),function(sn){UL=[];sn.forEach(function(d){var x=d.data();UL.push({id:d.id,Nome:x.Nome||"",Role:x.Role||"",Abas:x.Abas})});UL.sort(function(a,b){return a.Nome.localeCompare(b.Nome)});eqUI()})}
 async function eqAdd(){var n=$("eqn").value.trim(),e=$("eqe").value.trim(),s=$("eqs").value,m=$("eqm");
 var ab=[].slice.call(document.querySelectorAll("#eqa input[data-ab]:checked")).map(function(x){return x.getAttribute("data-ab")}),dn=ab.indexOf("dono")>=0;ab=ab.filter(function(x){return x!="dono"});
@@ -550,7 +552,7 @@ var d;try{var sn=await getDoc(doc(DB,"Users",u.uid));d=sn.exists()?sn.data():nul
 var r=d?String(d.Role||d.role||"").toLowerCase():"";var ab=d&&Array.isArray(d.Abas)?d.Abas:(DEFT[r]||[]);
 var isD=r=="dono",al=isD?ALL:OPS.filter(function(t){return ab.indexOf(t)>=0});
 if(!al.length){$("lmsg").textContent="Sua conta ainda não tem abas liberadas. Fale com o dono.";await signOut(AUTH);return}
-ROLE=isD?"dono":"equipe";ME={uid:u.uid,nome:d.Nome||d.nome||u.email};ALLOWED=al;EDIT=isD;EDITP=isD||al.indexOf("p")>=0;
+ROLE=isD?"dono":"equipe";ME={uid:u.uid,nome:d.Nome||d.nome||u.email};ALLOWED=al;EDIT=isD;$("cfg").hidden=!isD;EDITP=isD||al.indexOf("p")>=0;
 document.querySelectorAll(".tb").forEach(function(b){b.hidden=ALLOWED.indexOf(b.getAttribute("data-t"))<0});
 TAB=ALLOWED[0];MSEL=null;$("eqa").innerHTML=abHtml("",[]);$("login").hidden=true;$("lmsg").textContent="";startData();render()});
 $("lb2").addEventListener("click",function(){$("lmsg").textContent="";signInWithEmailAndPassword(AUTH,$("le").value.trim(),$("lp").value).catch(function(){$("lmsg").textContent="E-mail ou senha incorretos."})});
@@ -558,6 +560,37 @@ $("out").addEventListener("click",function(){signOut(AUTH);openD(false)});
 $("syn").addEventListener("click",async function(){var m=$("synm");m.textContent="Sincronizando…";try{await enableNetwork(DB);await Promise.race([waitForPendingWrites(DB),new Promise(function(_,rj){setTimeout(rj,8000)})]);m.textContent="Sincronizado às "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}catch(x){m.textContent="Sem conexão. Os dados estão salvos no aparelho."}});
 window.addEventListener("afterprint",clearPR);
 setInterval(function(){var e=$("tmw");if(e&&["mc","es","cc","mf"].indexOf(TAB)>=0)e.textContent=durH(info(mpd(),TAB).work)},30000);
+var PAL=[
+{id:"atual",n:"Petróleo e areia",L:{bg:"#f6f3ee",fg:"#26302f",mut:"#6f7c7a",card:"#ffffff",bd:"#e4ded3",pri:"#2f5d62",hd1:"#2f5d62",hd2:"#4a8087",teal:"#3f7a7f",sand:"#c8a165",mod:"#cfe3e0",arm:"#e5d3b3",ink:"#1f3b3f"},D:{bg:"#151b1b",fg:"#e8efee",mut:"#9fb0ae",card:"#1e2626",bd:"#324140",pri:"#8fc7c3",hd1:"#2f5d62",hd2:"#3f7a7f",teal:"#4a8f94",sand:"#b08d57",mod:"#2c5a5c",arm:"#7d6a47",ink:"#e6f2f1"}},
+{id:"nogueira",n:"Nogueira e mel",L:{bg:"#f5efe6",fg:"#2b211a",mut:"#7a6b5d",card:"#ffffff",bd:"#e6dccd",pri:"#4a3426",hd1:"#4a3426",hd2:"#6e4c37",teal:"#8b5e3c",sand:"#c8893b",mod:"#e6d6bf",arm:"#d9b27a",ink:"#2b211a"},D:{bg:"#1a1511",fg:"#f0e8dd",mut:"#b3a392",card:"#251e18",bd:"#3d322a",pri:"#e3b571",hd1:"#4a3426",hd2:"#6e4c37",teal:"#a86d3c",sand:"#c8893b",mod:"#4a3a2c",arm:"#8c6a3a",ink:"#f0e8dd"}},
+{id:"marinho",n:"Marinho e dourado",seed:{pri:"#1f2f4a",teal:"#2f4a73",sand:"#c9a24d",bg:"#f4f2ee",fg:"#16233a"}},
+{id:"oliva",n:"Oliva e terracota",seed:{pri:"#4b5a3c",teal:"#5f7149",sand:"#c2693f",bg:"#f3f0e7",fg:"#2a3220"}}];
+var DEFT={id:"nogueira"},TEMA=DEFT,SAVED=DEFT;
+function hx(h){h=h.replace("#","");return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+function mx(a,b,t){var A=hx(a),B=hx(b);return "#"+[0,1,2].map(function(i){return ("0"+Math.round(A[i]*(1-t)+B[i]*t).toString(16)).slice(-2)}).join("")}
+function derive(c){var L={bg:c.bg,fg:c.fg,mut:mx(c.fg,c.bg,.38),card:"#ffffff",bd:mx(c.bg,c.fg,.1),pri:c.pri,hd1:c.pri,hd2:mx(c.pri,"#ffffff",.2),teal:c.teal,sand:c.sand,mod:mx(c.pri,c.bg,.82),arm:mx(c.sand,c.bg,.5),ink:c.fg},db=mx(c.pri,"#000000",.65),df=mx(c.bg,"#ffffff",.5),D={bg:db,fg:df,mut:mx(df,db,.3),card:mx(db,"#ffffff",.06),bd:mx(db,"#ffffff",.14),pri:mx(c.sand,"#ffffff",.3),hd1:c.pri,hd2:mx(c.pri,"#ffffff",.2),teal:mx(c.teal,"#ffffff",.1),sand:c.sand,mod:mx(c.pri,"#ffffff",.1),arm:mx(c.sand,db,.55),ink:df};return{L:L,D:D}}
+function tObj(t){if(t&&t.id=="custom"&&t.c)return derive(t.c);var p=PAL.filter(function(x){return x.id==(t&&t.id)})[0]||PAL[1];return p.seed?derive(p.seed):p}
+function cssv(o){return Object.keys(o).map(function(k){return "--"+k+":"+o[k]}).join(";")}
+function applyTema(t){var o=tObj(t),st=document.getElementById("tema");if(!st){st=document.createElement("style");st.id="tema";document.head.appendChild(st)}
+st.textContent=":root{"+cssv(o.L)+'}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){'+cssv(o.D)+'}}:root[data-theme="dark"]{'+cssv(o.D)+"}";
+HEX.wood=o.L.mod;HEX.wood2=o.L.arm;HEX.ink=o.L.ink;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",o.L.hd1);TEMA=t;
+try{localStorage.setItem("tema",JSON.stringify(t))}catch(e){}}
+function setTm(m){var r=document.documentElement;if(m=="light"||m=="dark")r.setAttribute("data-theme",m);else r.removeAttribute("data-theme");try{localStorage.setItem("tmode",m)}catch(e){}}
+function temaSub(){onSnapshot(doc(DB,"config","tema"),function(d){var t=d.exists()&&d.data().id?{id:d.data().id,c:d.data().c||undefined}:DEFT;SAVED=t;applyTema(t)},function(){})}
+function temaSave(t){applyTema(t);SAVED=t;if(EDIT)setDoc(doc(DB,"config","tema"),{id:t.id,c:t.c||null}).catch(function(){alert("Não foi possível salvar para todos. Confira se a regra da coleção config foi publicada no Firestore.")})}
+function cfgUI(){var t=TEMA,L=tObj(t).L,tm="auto";try{tm=localStorage.getItem("tmode")||"auto"}catch(e){}
+$("cfgsh").innerHTML='<div class="row" style="justify-content:space-between;margin-bottom:0"><h2 style="margin:0">Aparência</h2><button id="cfgx">Fechar</button></div><p class="s">A paleta vale para todos os usuários.</p><h3>Paletas</h3><div class="lst">'
++PAL.map(function(p){var o=tObj({id:p.id}).L;return '<button class="li'+(t.id==p.id?" on":"")+'" data-pal="'+p.id+'" style="display:flex;align-items:center;gap:10px"><span style="display:flex;flex:none">'+[o.pri,o.teal,o.sand,o.bg,o.fg].map(function(c){return '<i style="width:18px;height:18px;background:'+c+';display:inline-block;border:1px solid var(--bd)"></i>'}).join("")+'</span><b style="display:inline">'+p.n+"</b></button>"}).join("")+"</div>"
++'<h3>Personalizar'+(t.id=="custom"?" (em uso)":"")+'</h3><div class="g2">'+[["pri","Cabeçalho e títulos"],["teal","Botões e abas"],["sand","Destaque"],["bg","Fundo"],["fg","Texto"]].map(function(x){return '<div><label>'+x[1]+'</label><input type="color" data-cc="'+x[0]+'" value="'+L[x[0]]+'" style="height:40px;padding:2px"></div>'}).join("")+'</div><div class="row" style="margin-top:10px"><button class="p" id="cfgap">Aplicar minhas cores</button></div><p class="s">Ao mexer nas cores você vê o resultado na hora. O claro e o escuro são gerados a partir delas.</p>'
++'<h3>Tema neste aparelho</h3><div class="row">'+[["auto","Automático"],["light","Claro"],["dark","Escuro"]].map(function(x){return '<button class="ch'+(tm==x[0]?" on":"")+'" data-tm="'+x[0]+'">'+x[1]+"</button>"}).join("")+"</div>"}
+function cfgClose(){$("cfgov").hidden=true;if(JSON.stringify(TEMA)!=JSON.stringify(SAVED))applyTema(SAVED)}
+try{var c0=JSON.parse(localStorage.getItem("tema")||"null");applyTema(c0&&c0.id?c0:DEFT);SAVED=TEMA;var tm0=localStorage.getItem("tmode");if(tm0)setTm(tm0)}catch(e){applyTema(DEFT)}
+$("cfg").addEventListener("click",function(){cfgUI();$("cfgov").hidden=false});
+$("cfgov").addEventListener("click",function(e){var t=e.target;if(t.id=="cfgov"||t.id=="cfgx"){cfgClose();return}
+var b=t.closest&&t.closest("[data-pal]");if(b){temaSave({id:b.getAttribute("data-pal")});cfgUI();return}
+if(t.id=="cfgap"){var c={};$("cfgov").querySelectorAll("[data-cc]").forEach(function(i){c[i.getAttribute("data-cc")]=i.value});temaSave({id:"custom",c:c});cfgUI();return}
+var m=t.closest&&t.closest("[data-tm]");if(m){setTm(m.getAttribute("data-tm"));cfgUI()}});
+$("cfgov").addEventListener("input",function(e){var i=e.target;if(i.getAttribute&&i.getAttribute("data-cc")){var c={};$("cfgov").querySelectorAll("[data-cc]").forEach(function(x){c[x.getAttribute("data-cc")]=x.value});applyTema({id:"custom",c:c})}});
 window.addEventListener("online",render);window.addEventListener("offline",render);
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </script>
