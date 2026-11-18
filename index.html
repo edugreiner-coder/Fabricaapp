@@ -53,8 +53,8 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20}
 .dr{position:fixed;top:0;left:0;bottom:0;width:min(88vw,340px);background:var(--card);z-index:21;box-sizing:border-box;padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,.25)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.ch{padding:4px 9px;border-radius:99px;font-size:.75rem}.ch.on{background:var(--teal);border-color:var(--teal);color:#fff}
-.po{display:none}.tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px}.tbl th,.tbl td{border:1px solid var(--bd);padding:5px 6px;text-align:left;vertical-align:top}.tbl th{background:var(--bg)}
-@media print{.np{display:none!important}body{padding:0}.card{border:0;padding:0}input,textarea{border:0;padding:0}body.pr-rep{background:#fff;color:#000}body.pr-rep>*:not(#rep){display:none!important}body.pr-rep #rep{display:block!important;color:#000}body.pr-rep .so{display:none!important}body.pr-rep .po{display:block!important}body.pr-rep .tbl th,body.pr-rep .tbl td{border:1px solid #888;color:#000}body.pr-rep .tbl th{background:#eee!important}body.pr-rep .kv span,body.pr-rep .s{color:#333}body.pr-rep .tbl tr{page-break-inside:avoid}}
+.po{display:none}#ficha{display:none}.fic{width:138mm;max-width:100%;color:#000;font:10pt/1.3 Helvetica,Arial,sans-serif;border-bottom:1px dashed #000;padding-bottom:3mm}.fic .fh{display:flex;justify-content:space-between;font-size:9pt;border-bottom:1px solid #000;padding-bottom:1mm}.fic .fn{font-size:16pt;font-weight:700;margin:2mm 0;line-height:1.15}.fic .fg{display:grid;grid-template-columns:1fr 1fr;gap:.6mm 6mm}.fic .fk{color:#444;font-size:9pt}.fic .fo{margin-top:1.5mm;font-size:9pt}.tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px}.tbl th,.tbl td{border:1px solid var(--bd);padding:5px 6px;text-align:left;vertical-align:top}.tbl th{background:var(--bg)}
+@media print{.np{display:none!important}body{padding:0}.card{border:0;padding:0}input,textarea{border:0;padding:0}body.pr-rep{background:#fff;color:#000}body.pr-rep>*:not(#rep){display:none!important}body.pr-rep #rep{display:block!important;color:#000}body.pr-rep .so{display:none!important}body.pr-rep .po{display:block!important}body.pr-rep .tbl th,body.pr-rep .tbl td{border:1px solid #888;color:#000}body.pr-rep .tbl th{background:#eee!important}body.pr-rep .kv span,body.pr-rep .s{color:#333}body.pr-rep .tbl tr{page-break-inside:avoid}body.pr-fic{background:#fff}body.pr-fic>*:not(#ficha){display:none!important}body.pr-fic #ficha{display:block!important}@page{margin:7mm}}
 </style>
 </head>
 <body>
@@ -128,6 +128,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div class="lst" id="lst"></div>
 <div class="row" style="margin-top:12px"><button id="syn">Sincronizar</button><button id="out">Sair</button></div><p class="s" id="synm"></p>
 </aside>
+<div id="ficha"></div>
 <div id="cfgov" class="np" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;display:flex;align-items:flex-end;justify-content:center"><div id="cfgsh" style="background:var(--card);color:var(--fg);width:100%;max-width:760px;max-height:88vh;overflow:auto;border-radius:16px 16px 0 0;padding:14px"></div></div>
 <script type="module">
 import {initializeApp,getApps} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -179,7 +180,7 @@ if(s.mf=="fin")return{k:"fin",t:"Finalizado",c:"#2e9e5b"};
 var L=p.tp=="ref"?["cc","mf"]:["mc","es","cc","mf"];if(L.some(function(k){return s[k]=="prod"||s[k]=="fin"||s[k]=="pause"})){var cur=L.filter(function(k){return s[k]!="fin"})[0];return{k:"prod",t:"Em produção · "+N[cur]+(s[cur]=="pause"?" (pausado)":""),c:s[cur]=="pause"?"#d99a1f":"#2f7de1"}}
 if(p.sit=="conf")return{k:"conf",t:"Confirmado",c:"#3f7a7f"};
 return{k:"aguard",t:"Aguardando confirmação",c:"#b7791f"}}
-function sitR(p){var q=sitOf(p);$("sitbox").innerHTML='<span class="bd2" style="background:'+q.c+'">'+q.t+"</span>"+(EDIT&&(q.k=="aguard"||q.k=="conf")?'<button class="p" data-sit="1">'+(q.k=="aguard"?"Confirmar pedido":"Desfazer confirmação")+"</button>":"")}
+function sitR(p){var q=sitOf(p);$("sitbox").innerHTML='<span class="bd2" style="background:'+q.c+'">'+q.t+"</span>"+(EDIT&&DRAFT&&DRAFT.id==p.id?'<span class="s">Salve o pedido para poder confirmar.</span>':EDIT&&(q.k=="aguard"||q.k=="conf")?'<button class="p" data-sit="1">'+(q.k=="aguard"?"Confirmar pedido":"Desfazer confirmação")+"</button>":"")}
 function avisos(){var seen=[];try{seen=JSON.parse(localStorage.getItem("vistos")||"[]")}catch(e){}
 $("avisos").innerHTML=TAB!="p"?"":S.pedidos.filter(function(q){return q.finAt&&seen.indexOf(q.id)<0}).map(function(q){return '<div class="aviso np"><span>Sofá pronto: <b>'+esc(q.nome||"")+'</b></span><button data-vi="'+q.id+'">OK</button></div>'}).join("")}
 var SR={mc:"marceneiro",es:"espumagem",cc:"costureira",mf:"montagem"},RL={dono:"Dono",vendedora:"Vendedora",marceneiro:"Marceneiro",espumagem:"Espumagem",costureira:"Costureira",montagem:"Montagem"};
@@ -199,8 +200,15 @@ function expT(){return "expediente 8h00–11h45 e 13h20–18h00 ("+DIAS.map(func
 var RFL={"1":"Hoje","y":"Ontem","7":"Últimos 7 dias","15":"Últimos 15 dias","30":"Últimos 30 dias"};
 function dfull(t){var d=new Date(t);return ("0"+d.getDate()).slice(-2)+"/"+("0"+(d.getMonth()+1)).slice(-2)+"/"+d.getFullYear()}
 function pzTxt(z){return "Pausou "+dtm(z.from)+" → "+(z.open?"ainda pausado":(z.by=="prod"?"retomou ":"encerrou ")+dtm(z.to))+" · pausado "+durH(z.ms)}
+function fichaHtml(p){var g=geo(p),rf=p.tp=="ref",C={wood:"#efefef",wood2:"#cfcfcf",ink:"#000000"};
+function kv(k,v){return '<div><span class="fk">'+k+"</span> <b>"+esc(v)+"</b></div>"}
+var rows=rf?[kv("Tipo","Reforma"),kv("Tecido",p.tec||"—")]:[kv("Modelo",p.modelo||"—"),kv("Braço",p.braco||"—"),kv("Módulos",g.m+" × "+fm(g.mw)+" cm"),kv("Braços",g.b+" × "+fm(g.bw)+" cm"),kv("Total",fm(g.t)+" cm"),kv("Tecido",p.tec||"—")];
+if(p.en&&p.en.dt)rows.push(kv("Entrega",dEnt(p.en)));
+var sv="";if(!rf&&g.t>0&&g.mw>0){var r=topView(g,C);sv='<svg viewBox="'+r.vb.join(" ")+'" style="width:100%;max-height:46mm;margin-top:2mm">'+r.inner+"</svg>"}
+return '<div class="fic"><div class="fh"><span>Fábrica Luxor · Pedido '+(p.num?pad(p.num):"—")+"</span><span>"+dfull(p.cr||Date.now())+'</span></div><div class="fn">'+esc(p.nome||"(sem nome)")+'</div><div class="fg">'+rows.join("")+"</div>"+(p.obs?'<div class="fo"><span class="fk">Obs.</span> '+esc(p.obs)+"</div>":"")+sv+"</div>"}
+function printFicha(p){clearPR();$("ficha").innerHTML=fichaHtml(p);document.body.classList.add("pr-fic");setTimeout(function(){try{window.print()}catch(e){}},120)}
 function printRep(){document.body.classList.add("pr-rep");setTimeout(function(){try{window.print()}catch(e){}},120)}
-function clearPR(){document.body.classList.remove("pr-rep")}
+function clearPR(){document.body.classList.remove("pr-rep");document.body.classList.remove("pr-fic")}
 var LB={prod:"Produção",pause:"Pausado",fin:"Finalizado",reset:"Zerado",criado:"Criado",editado:"Editado",confirmado:"Confirmado",desconfirmado:"Confirmação desfeita",salvo:"Entrega salva"},RF="1";
 function evs(p,k){return (p.hist||[]).filter(function(e){return e.e==k}).sort(function(a,b){return a.t-b.t})}
 function info(p,k){var E=evs(p,k),ini=null,fim=null,run=0,work=0,pauses=0,pl=[],pz=null;
@@ -355,7 +363,10 @@ if(g("data-print")){printCuts();return true}
 if(g("data-prrep")){printRep();return true}
 if(g("data-eqadd")){eqAdd();return true}
 var rm=g("data-rm");if(rm){if(ROLE=="dono"&&confirm("Remover o acesso desta pessoa?"))deleteDoc(doc(DB,"Users",rm));return true}
-if(g("data-sit")){if(EDIT){var p0=cp();if(!p0.ph&&!(DRAFT&&DRAFT.id==p0.id)){p0.sit=p0.sit=="conf"?"aguard":"conf";var ev0={e:"p",a:p0.sit=="conf"?"confirmado":"desconfirmado",t:Date.now(),n:ME?ME.nome:"",u:ME?ME.uid:""};p0.hist=(p0.hist||[]).concat([ev0]);render();updateDoc(doc(DB,"pedidos",p0.id),{sit:p0.sit,hist:arrayUnion(ev0)}).catch(function(){})}}return true}
+if(g("data-sit")){if(EDIT){var p0=cp();if(p0.ph)return true;var sm=$("sv");
+if(DRAFT&&DRAFT.id==p0.id){sm.textContent="Toque em Salvar para criar o pedido antes de confirmar.";return true}
+var sOld=p0.sit,hOld=p0.hist;p0.sit=sOld=="conf"?"aguard":"conf";var ev0={e:"p",a:p0.sit=="conf"?"confirmado":"desconfirmado",t:Date.now(),n:ME?ME.nome:"",u:ME?ME.uid:""};p0.hist=(hOld||[]).concat([ev0]);render();$("sv").textContent="Salvando…";
+updateDoc(doc(DB,"pedidos",p0.id),{sit:p0.sit,hist:arrayUnion(ev0)}).then(function(){$("sv").textContent=p0.sit=="conf"?"Pedido confirmado.":"Confirmação desfeita."}).catch(function(e){p0.sit=sOld;p0.hist=hOld;render();$("sv").textContent="Não foi possível salvar a confirmação ("+(e&&e.code||"erro")+")."})}return true}
 var vi=g("data-vi");if(vi){var sn=[];try{sn=JSON.parse(localStorage.getItem("vistos")||"[]")}catch(e){}sn.push(vi);try{localStorage.setItem("vistos",JSON.stringify(sn))}catch(e){}avisos();return true}
 var rf=g("data-rf");if(rf){RF=rf;render();return true}
 var stt=g("data-st");
@@ -479,7 +490,7 @@ updateDoc(doc(DB,"pedidos",p.id),{tp:p.tp||"novo",tec:p.tec||"",tecO:!!p.tecO,no
 $("ex").addEventListener("click",function(){var p=cp(),b=$("ex");if(!p||p.ph||EDITING==p.id)return;
 if(b.getAttribute("data-c")!="1"){b.setAttribute("data-c","1");b.textContent="Toque de novo para excluir";setTimeout(function(){b.removeAttribute("data-c");b.textContent="Excluir pedido"},4000);return}
 b.removeAttribute("data-c");b.textContent="Excluir pedido";var id=p.id;S.pedidos=S.pedidos.filter(function(q){return q.id!=id});ensurePh();S.atual=S.pedidos[S.pedidos.length-1].id;render();deleteDoc(doc(DB,"pedidos",id));deleteDoc(doc(DB,"fotos",id));deleteDoc(doc(DB,"fotosr",id))});
-$("pr").addEventListener("click",function(){clearPR();try{window.print()}catch(e){}});
+$("pr").addEventListener("click",function(){var p=cp();if(!p||p.ph)return;printFicha(p)});
 render();
 var TABS={dono:["p","cm","mc","es","cc","mf","md","eq"],vendedora:["p"],marceneiro:["cm","mc"],espumagem:["es"],costureira:["cc"],montagem:["mf"]};
 function dEnt(e){if(!e||!e.dt)return "";var a=e.dt.split("-"),d=new Date(+a[0],+a[1]-1,+a[2]);return DN[d.getDay()]+" "+a[2]+"/"+a[1]+(e.hr?" às "+e.hr:"")}
