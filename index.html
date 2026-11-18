@@ -80,6 +80,16 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div><label for="mw">Largura</label><input id="mw" data-k="mw" data-n="1" inputmode="decimal"></div>
 <h3>Medida de cada braço (cm)</h3>
 <div><label for="bw">Largura</label><input id="bw" data-k="bw" data-n="1" inputmode="decimal"></div>
+<h3>Chaise</h3>
+<label for="chk" style="display:flex;align-items:center;gap:8px;margin-top:0"><input type="checkbox" id="chk" style="width:auto;margin:0;padding:0"> Este sofá tem chaise</label>
+<div id="chBox" hidden>
+<div class="g" style="margin-top:8px">
+<div><label for="chq">Qtd. de chaise</label><select id="chq" data-k="chq" data-n="1"><option value="1">1</option><option value="2">2 (pontas)</option></select></div>
+<div><label for="chp">Profundidade</label><input id="chp" data-k="chp" data-n="1" inputmode="decimal"></div>
+<div><label for="chw">Largura</label><input id="chw" data-k="chw" data-n="1" inputmode="decimal" placeholder="= módulo"></div>
+</div>
+<div id="chlw"><label for="chl" style="margin-top:8px">Lado da chaise</label><select id="chl" data-k="chl"><option value="d">Direita</option><option value="e">Esquerda</option></select></div>
+<p class="s" id="chn"></p></div>
 <div id="tecN"></div>
 <div class="g2" style="margin-top:12px">
 <div><label for="modelo">Modelo</label><select id="modelo" data-k="modelo"></select></div>
@@ -136,7 +146,7 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,createUser
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,getDoc,setDoc,deleteDoc,collection,onSnapshot,enableNetwork,waitForPendingWrites,runTransaction,updateDoc,arrayUnion} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const FBCFG={apiKey:"AIzaSyAzRYMn8rQiGn9AeCZWWzH4EtiEgeBvEW8",authDomain:"fabricaluxor.firebaseapp.com",projectId:"fabricaluxor",storageBucket:"fabricaluxor.firebasestorage.app",messagingSenderId:"414992232553",appId:"1:414992232553:web:62a4eb066bd0c4e9bf32f8"};
 var $=function(i){return document.getElementById(i)};
-function NP(){return{id:"p"+Date.now(),cr:Date.now(),cm:[],cb:[],st:{},sit:"aguard",num:0,por:"",en:{},hist:[],tp:"novo",tec:"",tecO:false,nome:"Novo pedido",mods:2,bracos:2,mw:130,mp:90,bw:15,bp:90,modelo:"Village",braco:"Quadrado",obs:""}}
+function NP(){return{id:"p"+Date.now(),cr:Date.now(),cm:[],cb:[],st:{},sit:"aguard",num:0,por:"",en:{},hist:[],tp:"novo",tec:"",tecO:false,nome:"Novo pedido",mods:2,bracos:2,mw:130,mp:90,bw:15,bp:90,modelo:"Village",braco:"Quadrado",obs:"",ch:false,chq:1,chp:160,chl:"d",chw:""}}
 function norm(p){var d=NP(),m=/^p(\d{10,})$/.exec(p.id||"");if(p.cr===undefined&&m)p.cr=+m[1];for(var k in d)if(p[k]===undefined)p[k]=d[k];return p}
 var first=NP();first.id="p1";first.nome="Pedido 1";
 var S={atual:"p1",pedidos:[first]},EDIT=false,EDITP=false,ROLE="",ME=null,DB=null,AUTH=null,ALLOWED=[],tms={},STARTED=false,ENED=null,ENORIG="",EDITING=null,DRAFT=null,ORIG="",FUN=null,FID=null,TAB="p",MSEL=null,DEPTH=90,PNG=null,pt,FIL="1",D1="",D2="";
@@ -146,22 +156,28 @@ function cp(){return byId(S.atual)}
 function num(x){var v=parseFloat(String(x).replace(",","."));return isNaN(v)?0:v}
 function fm(x){return (Math.round(x*10)/10).toString().replace(".",",")}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}
-function geo(p){var b=Math.min(2,Math.max(0,Math.round(num(p.bracos)))),m=Math.max(1,Math.round(num(p.mods)));
-return{b:b,m:m,mw:num(p.mw),mp:DEPTH,bw:num(p.bw),bp:DEPTH,t:m*num(p.mw)+b*num(p.bw)}}
+function geo(p){var b=Math.min(2,Math.max(0,Math.round(num(p.bracos)))),m=Math.max(1,Math.round(num(p.mods))),cq=p.ch?Math.min(2,m,Math.max(1,Math.round(num(p.chq))||1)):0,mw=num(p.mw),bw=num(p.bw),cw=cq?(num(p.chw)||mw):0,cd=cq?(num(p.chp)||DEPTH):0,r=m-cq;
+return{b:b,m:m,r:r,cq:cq,cs:p.chl=="e"?"e":"d",cw:cw,cd:cd,mw:mw,mp:DEPTH,bw:bw,bp:DEPTH,t:r*mw+cq*cw+b*bw}}
+function mTxt(g,sep){var t=g.r?g.r+sep+fm(g.mw)+" cm":"";if(g.cq)t+=(t?" + ":"")+g.cq+" chaise"+(g.cq==1?" ("+(g.cs=="e"?"esquerda":"direita")+")":" (as duas pontas)")+": "+fm(g.cw)+" × "+fm(g.cd)+" cm";return t}
+function chNote(g){return g.cq?"Módulos é o total, inclui a chaise: "+(g.r?g.r+" módulo(s) comum(ns) + ":"")+g.cq+" chaise (profundidade "+fm(g.cd)+" cm).":""}
 function topView(g,C){
-var D=Math.max(g.mp,g.b?g.bp:0),fs=Math.max(g.t,D)/30,o="",x=0,i;
+var D=Math.max(g.mp,g.b?g.bp:0,g.cq?g.cd:0),fs=Math.max(g.t,D)/30,o="",x=0,i;
 function rc(X,w,h,c){return '<rect x="'+X+'" y="0" width="'+w+'" height="'+h+'" rx="'+fs*.3+'" fill="'+C[c]+'" stroke="'+C.ink+'" stroke-width="1.5" vector-effect="non-scaling-stroke"/>'}
 function tx(X,Y,s,r){return '<text x="'+X+'" y="'+Y+'" font-size="'+fs+'" font-weight="600" fill="'+C.ink+'" text-anchor="middle"'+(r?' transform="rotate(-90 '+X+" "+Y+')"':"")+">"+esc(s)+"</text>"}
 function arm(X){o+=rc(X,g.bw,g.bp,"wood2")+tx(X+g.bw/2+fs*.35,g.bp/2,fm(g.bw)+" cm",1)}
-if(g.b>=1){arm(0);x=g.bw}
-for(i=0;i<g.m;i++){o+=rc(x,g.mw,g.mp,"wood")+tx(x+g.mw/2,g.mp/2+fs*.35,fm(g.mw)+" cm");x+=g.mw}
-if(g.b==2)arm(x);
+var cl=g.cq==2||(g.cq==1&&g.cs=="e"),cr2=g.cq==2||(g.cq==1&&g.cs=="d"),aL=g.b>=2||(g.b==1&&!(g.cq==1&&g.cs=="e")),aR=g.b>=2||(g.b==1&&g.cq==1&&g.cs=="e");
+function chz(X){o+=rc(X,g.cw,g.cd,"wood")+tx(X+g.cw/2,g.mp/2+fs*.35,fm(g.cw)+" cm")+tx(X+g.cw/2,(g.cd>g.mp+fs*2.5?(g.mp+g.cd)/2:g.mp/2+fs*1.8)+fs*.35,"Chaise "+fm(g.cd))}
+if(aL){arm(0);x=g.bw}
+if(cl){chz(x);x+=g.cw}
+for(i=0;i<g.r;i++){o+=rc(x,g.mw,g.mp,"wood")+tx(x+g.mw/2,g.mp/2+fs*.35,fm(g.mw)+" cm");x+=g.mw}
+if(cr2){chz(x);x+=g.cw}
+if(aR)arm(x);
 var Y=D+fs*1.8,L='<line x1="X1" y1="Y1" x2="X2" y2="Y2" stroke="'+C.ink+'" stroke-width="1.5" vector-effect="non-scaling-stroke"/>';
 function ln(a,b,c,d){return L.replace("X1",a).replace("Y1",b).replace("X2",c).replace("Y2",d)}
 o+=ln(0,Y,g.t,Y)+ln(0,Y-fs*.5,0,Y+fs*.5)+ln(g.t,Y-fs*.5,g.t,Y+fs*.5)+tx(g.t/2,Y+fs*1.6,"Total: "+fm(g.t)+" cm");
 return{inner:o,vb:[-fs,-fs,g.t+2*fs,Y+fs*3.2]}}
 function paint(svg,g){if(g.t<=0||g.mw<=0){svg.innerHTML="";return false}var r=topView(g,VAR);svg.setAttribute("viewBox",r.vb.join(" "));svg.innerHTML=r.inner;return true}
-function drawAll(){var g=geo(cp());$("tam").value=fm(g.t);$("wn").textContent=paint($("all"),g)?"":"Preencha as medidas do módulo.";prep()}
+function drawAll(){var g=geo(cp());$("tam").value=fm(g.t);if($("chn"))$("chn").textContent=chNote(g);$("wn").textContent=paint($("all"),g)?"":"Preencha as medidas do módulo.";prep()}
 function inRange(q){if(q.ph)return false;var c=q.cr||0;
 if(FIL=="m"){var a=D1?new Date(D1+"T00:00:00").getTime():0,b=D2?new Date(D2+"T23:59:59").getTime():Infinity;return c>=a&&c<=b}
 var s=new Date();s.setHours(0,0,0,0);s.setDate(s.getDate()-(+FIL-1));return c>=s.getTime()}
@@ -202,7 +218,7 @@ function dfull(t){var d=new Date(t);return ("0"+d.getDate()).slice(-2)+"/"+("0"+
 function pzTxt(z){return "Pausou "+dtm(z.from)+" → "+(z.open?"ainda pausado":(z.by=="prod"?"retomou ":"encerrou ")+dtm(z.to))+" · pausado "+durH(z.ms)}
 function fichaHtml(p){var g=geo(p),rf=p.tp=="ref",C={wood:"#efefef",wood2:"#cfcfcf",ink:"#000000"};
 function kv(k,v){return '<div><span class="fk">'+k+"</span> <b>"+esc(v)+"</b></div>"}
-var rows=rf?[kv("Tipo","Reforma"),kv("Tecido",p.tec||"—")]:[kv("Modelo",p.modelo||"—"),kv("Braço",p.braco||"—"),kv("Módulos",g.m+" × "+fm(g.mw)+" cm"),kv("Braços",g.b+" × "+fm(g.bw)+" cm"),kv("Total",fm(g.t)+" cm"),kv("Tecido",p.tec||"—")];
+var rows=rf?[kv("Tipo","Reforma"),kv("Tecido",p.tec||"—")]:[kv("Modelo",p.modelo||"—"),kv("Braço",p.braco||"—"),kv("Módulos",mTxt(g," × ")),kv("Braços",g.b+" × "+fm(g.bw)+" cm"),kv("Total",fm(g.t)+" cm"),kv("Tecido",p.tec||"—")];
 if(p.en&&p.en.dt)rows.push(kv("Entrega",dEnt(p.en)));
 var sv="";if(!rf&&g.t>0&&g.mw>0){var r=topView(g,C);sv='<svg viewBox="'+r.vb.join(" ")+'" style="width:100%;max-height:46mm;margin-top:2mm">'+r.inner+"</svg>"}
 return '<div class="fic"><div class="fh"><span>Fábrica Luxor · Pedido '+(p.num?pad(p.num):"—")+"</span><span>"+dfull(p.cr||Date.now())+'</span></div><div class="fn">'+esc(p.nome||"(sem nome)")+'</div><div class="fg">'+rows.join("")+"</div>"+(p.obs?'<div class="fo"><span class="fk">Obs.</span> '+esc(p.obs)+"</div>":"")+sv+"</div>"}
@@ -255,9 +271,9 @@ var per2=RFL[RF]+" ("+dfull(R[0])+(RF=="1"||RF=="y"?"":" a "+dfull(R[1]))+")";
 el.innerHTML='<div class="card v"><div class="so"><h2>Relatório · '+nm0+'</h2><div class="chips">'+chips+'</div><div class="row"><button class="p" data-prrep="1">Imprimir relatório</button></div>'+(P?"":'<p class="s">Tempo trabalhado conta só o '+expT()+".</p>")+sm+(ls||'<p class="s">Nada neste período.</p>')+"</div>"
 +'<div class="po"><h2 style="color:#000;font-size:1.2rem">Fábrica Luxor · Relatório · '+nm0+'</h2><p class="s">'+per2+(P?"":" · tempo trabalhado conta só o "+expT())+"</p>"+sm+tbl+'<p class="s">Impresso em '+dtm(Date.now())+"</p></div></div>"}
 function lista(el,id){var L=S.pedidos.filter(function(q){return inRange(q)&&(TAB=="p"||aplic(q,TAB))});if(!L.length){el.innerHTML='<p class="s">Nenhum pedido neste período.</p>';return}el.innerHTML=L.slice().sort(function(a,b){if(TAB=="en"){var x=a.en&&a.en.dt?a.en.dt+(a.en.hr||"00:00"):"",y=b.en&&b.en.dt?b.en.dt+(b.en.hr||"00:00"):"";if(x&&y)return x<y?-1:x>y?1:0;if(x)return -1;if(y)return 1}return (b.cr||0)-(a.cr||0)}).map(function(q){var g=geo(q);
-return '<button class="li'+(q.id==id?" on":"")+'" data-pick="'+q.id+'"><b>'+esc(tt(q))+'<span style="float:right">'+stIcons(q)+"</span></b><span>"+dt(q.cr)+" · "+(q.tp=="ref"?"Reforma"+(q.tec?" · "+esc(q.tec):""):g.m+" módulo(s) · "+g.b+" braço(s) · "+fm(g.t)+" cm · "+esc(q.modelo||""))+"</span>"+(TAB=="p"?'<span style="display:block;color:'+sitOf(q).c+';font-weight:600">'+sitOf(q).t+"</span>":"")+(TAB=="en"&&q.en&&q.en.dt?'<span style="display:block;color:var(--teal);font-weight:600">Entrega '+esc(dEnt(q.en))+"</span>":"")+"</button>"}).join("")}
+return '<button class="li'+(q.id==id?" on":"")+'" data-pick="'+q.id+'"><b>'+esc(tt(q))+'<span style="float:right">'+stIcons(q)+"</span></b><span>"+dt(q.cr)+" · "+(q.tp=="ref"?"Reforma"+(q.tec?" · "+esc(q.tec):""):g.m+" módulo(s)"+(g.cq?" c/ chaise":"")+" · "+g.b+" braço(s) · "+fm(g.t)+" cm · "+esc(q.modelo||""))+"</span>"+(TAB=="p"?'<span style="display:block;color:'+sitOf(q).c+';font-weight:600">'+sitOf(q).t+"</span>":"")+(TAB=="en"&&q.en&&q.en.dt?'<span style="display:block;color:var(--teal);font-weight:600">Entrega '+esc(dEnt(q.en))+"</span>":"")+"</button>"}).join("")}
 function detM(){var p=byId(MSEL||S.atual),g=geo(p);
-var rows=p.tp=="ref"?[["Pedido",p.num?pad(p.num):"—"],["Cliente",p.nome],["Tipo","Reforma"],["Tecido",p.tec||"—"],["Situação",sitOf(p).t]]:[["Pedido",p.num?pad(p.num):"—"],["Cliente",p.nome],["Modelo",p.modelo],["Tipo de braço",p.braco],["Módulos",g.m+" de "+fm(g.mw)+" cm"],["Braços",g.b+" de "+fm(g.bw)+" cm"],["Tamanho total",fm(g.t)+" cm"],["Tecido",p.tec||"—"],["Situação",sitOf(p).t]];
+var rows=p.tp=="ref"?[["Pedido",p.num?pad(p.num):"—"],["Cliente",p.nome],["Tipo","Reforma"],["Tecido",p.tec||"—"],["Situação",sitOf(p).t]]:[["Pedido",p.num?pad(p.num):"—"],["Cliente",p.nome],["Modelo",p.modelo],["Tipo de braço",p.braco],["Módulos",mTxt(g," de ")],["Braços",g.b+" de "+fm(g.bw)+" cm"],["Tamanho total",fm(g.t)+" cm"],["Tecido",p.tec||"—"],["Situação",sitOf(p).t]];
 if(p.obs)rows.push(["Observação",p.obs]);
 $("det").innerHTML=rows.map(function(r){return '<div class="kv"><span>'+r[0]+"</span><b>"+esc(r[1])+"</b></div>"}).join("");
 paint($("all2"),g);return p.id}
@@ -278,15 +294,16 @@ function szHtml(c){if(!c.tams)return '<div class="row np" style="margin-bottom:6
 var sel=szSel(c),h='<div class="chips" style="margin-bottom:6px">'+c.tams.map(function(t){return '<button class="ch'+(sel&&sel.w==t.w?" on":"")+'" data-tsel="'+c.id+":"+t.w+'">'+t.w+" cm</button>"}).join("")+'<button class="ch" data-tadd="'+c.id+'">+ tamanho</button></div>';
 if(sel)h+='<div class="row np" style="margin-bottom:6px"><button data-tcopy="'+c.id+'">Copiar '+sel.w+' cm para…</button><button data-tdel="'+c.id+'">Excluir '+sel.w+' cm</button></div><p class="s">Peças do braço de '+sel.w+' cm (medidas exatas).</p>';else h+='<p class="s">Adicione o primeiro tamanho (ex.: 20).</p>';return h}
 function qfx(it,W){if(!it.fx)return num(it.q);var P=String(it.fx).split(";").map(function(x){var a=x.split("=");return[num(a[0]),num(a[1])]}).filter(function(a){return !isNaN(a[0])&&!isNaN(a[1])}).sort(function(a,b){return b[0]-a[0]});for(var i=0;i<P.length;i++)if(W>=P[i][0])return P[i][1];return 0}
-function pcOf(it,W,ref,mult){var k=ref?W/ref:1,m=it.v===0?0:(it.v===2?2:1),l=num(it.l)*(m==1?k:1),w=num(it.w)*(m==2?k:1),q=qfx(it,W),n=q*mult,mdf=it.mat=="mdf",v=mdf?w*l*n/10000:w*2.5*l*n/1e6;return{l:l,w:w,q:q,n:n,mdf:mdf,v:v,t:mdf?fm2(v)+" m²":fm3(v)+" m³"}}
+function pcOf(it,W,ref,mult,dk){var k=ref?W/ref:1,m=it.v===0?0:(it.v===2?2:(it.v===3?3:1)),l=num(it.l)*(m==1?k:(m==3?(dk||1):1)),w=num(it.w)*(m==2?k:1),q=qfx(it,W),n=q*mult,mdf=it.mat=="mdf",v=mdf?w*l*n/10000:w*2.5*l*n/1e6;return{l:l,w:w,q:q,n:n,mdf:mdf,v:v,t:mdf?fm2(v)+" m²":fm3(v)+" m³"}}
 function cuts(){
 var p=mpd();if(p.tp=="ref"){$("cuts").innerHTML='<div class="card"><p class="s">Reforma: sem corte de madeira.</p></div>';return}
 var g=geo(p),mod=catFind(CAT.mod,p.modelo),br=catFind(CAT.br,p.braco),T={mdf:0,mad:0},sub={cm:{mdf:0,mad:0},cb:{mdf:0,mad:0}};
-function row(it,W,ref,mult,k){var c=pcOf(it,W,ref,mult);if(c.mdf){sub[k].mdf+=c.v;T.mdf+=c.v}else{sub[k].mad+=c.v;T.mad+=c.v}
-return '<div class="sw"><div class="fg"><b>'+(c.mdf?"MDF":"Madeira")+" · "+fm(c.w)+" × "+fm(c.l)+" cm</b><span>"+fm(c.q)+" × "+mult+" = "+fm(c.n)+" peça(s) · "+c.t+"</span></div></div>"}
-var h='<div class="card"><h2>Corte de madeira - Módulo</h2><p class="s">Modelo: '+esc(p.modelo||"(não informado)")+" · "+g.m+" módulo(s) de "+fm(g.mw)+" cm</p>";
+function row(it,W,ref,mult,k,dk,tag){var c=pcOf(it,W,ref,mult,dk);if(c.mdf){sub[k].mdf+=c.v;T.mdf+=c.v}else{sub[k].mad+=c.v;T.mad+=c.v}
+return '<div class="sw"><div class="fg"><b>'+(tag?tag+" · ":"")+(c.mdf?"MDF":"Madeira")+" · "+fm(c.w)+" × "+fm(c.l)+" cm</b><span>"+fm(c.q)+" × "+mult+" = "+fm(c.n)+" peça(s) · "+c.t+"</span></div></div>"}
+var h='<div class="card"><h2>Corte de madeira - Módulo</h2><p class="s">Modelo: '+esc(p.modelo||"(não informado)")+" · "+mTxt(g," de ")+"</p>";
 if(!mod)h+='<p class="s">Modelo não encontrado no cadastro.'+(EDIT?" Cadastre na aba Modelos.":"")+"</p>";
-else{var grp=[],map={};(mod.pecas||[]).forEach(function(it){var n0=(it.loc||"").trim()||"Peça",key=nm(n0);if(!map[key]){map[key]={nm:n0,rows:[],mdf:0,mad:0};grp.push(map[key])}var G=map[key],c=pcOf(it,g.mw,100,g.m);G.rows.push(row(it,g.mw,100,g.m,"cm"));if(c.mdf)G.mdf+=c.v;else G.mad+=c.v});
+else{var grp=[],map={};(mod.pecas||[]).forEach(function(it){var n0=(it.loc||"").trim()||"Peça",key=nm(n0);if(!map[key]){map[key]={nm:n0,rows:[],mdf:0,mad:0};grp.push(map[key])}var G=map[key];if(g.r>0){var c=pcOf(it,g.mw,100,g.r);G.rows.push(row(it,g.mw,100,g.r,"cm"));if(c.mdf)G.mdf+=c.v;else G.mad+=c.v}
+if(g.cq){var dk=g.cd/DEPTH,c2=pcOf(it,g.cw,100,g.cq,dk);G.rows.push(row(it,g.cw,100,g.cq,"cm",dk,"Chaise"));if(c2.mdf)G.mdf+=c2.v;else G.mad+=c2.v}});
 h+='<div class="lst">';grp.forEach(function(G){var key=p.id+":cm:"+nm(G.nm),open=EXP[key],sm=[];if(G.mdf)sm.push(fm2(G.mdf)+" m² MDF");if(G.mad)sm.push(fm3(G.mad)+" m³ madeira");
 h+='<button class="li" data-grp="'+esc(key)+'"><b>'+esc(G.nm)+'<span style="float:right;font-size:1rem;color:inherit">'+(open?"▾":"▸")+"</span></b><span>"+G.rows.length+" peça(s)"+(sm.length?" · "+sm.join(" · "):"")+"</span></button>";
 if(open)h+='<div style="margin:0 0 8px 10px">'+G.rows.join("")+"</div>"});
@@ -303,17 +320,17 @@ function kv(a,b){return '<div class="kv"><span>'+a+"</span><b>"+b+"</b></div>"}
 h+='<div class="card v"><h2>Resumo de material</h2>'+kv("Módulos",fm2(sub.cm.mdf)+" m² MDF · "+fm3(sub.cm.mad)+" m³ madeira")+kv("Braços",fm2(sub.cb.mdf)+" m² MDF · "+fm3(sub.cb.mad)+" m³ madeira")+kv("Total de MDF",fm2(T.mdf)+" m²")+kv("Total de madeira",fm3(T.mad)+" m³")+"</div>";
 h+='<div class="row np"><button class="p" data-print="1">Imprimir</button></div>';
 $("cuts").innerHTML=h}
-function crow(coll,cid,i,it){var md=coll=="modelos",fx=it.v===0?" (fixo)":(!md&&it.v===2?" (largura acompanha)":"");
+function crow(coll,cid,i,it){var md=coll=="modelos",fx=it.v===0?" (fixo)":it.v===3?" (acompanha a profundidade)":(!md&&it.v===2?" (largura acompanha)":"");
 return '<div class="sw"><div class="bgE">Editar</div><div class="bgD"><button data-del2="'+coll+":"+cid+":"+i+'">Excluir</button></div><div class="fg" data-sw="'+coll+":"+cid+":"+i+'"><b>'+(md&&it.loc?esc(it.loc)+" · ":"")+(it.mat=="mdf"?"MDF":"Madeira")+" · "+fm(num(it.w))+" × "+fm(num(it.l))+" cm"+fx+"</b><span>"+(it.fx?"quantidade por largura: "+esc(it.fx):"quantidade "+fm(num(it.q))+(md?" por módulo":" por braço"))+"</span></div></div>"}
 function grpHtml(coll,c){if(coll!="modelos")return plist(coll,c).map(function(it,i){return crow(coll,c.id,i,it)}).join("");
 var grp=[],map={};(c.pecas||[]).forEach(function(it,i){var n0=(it.loc||"").trim()||"Peça",k=nm(n0);if(!map[k]){map[k]={nm:n0,items:[]};grp.push(map[k])}map[k].items.push([i,it])});
 return grp.map(function(G){var key="cg:"+c.id+":"+nm(G.nm),open=EXP[key];return '<button class="li" data-cgrp="'+esc(key)+'"><b>'+esc(G.nm)+'<span style="float:right;font-size:1rem;color:inherit">'+(open?"▾":"▸")+"</span></b><span>"+G.items.length+" peça(s)</span></button>"+(open?'<div style="margin:0 0 8px 10px">'+G.items.map(function(x){return crow(coll,c.id,x[0],x[1])}).join("")+"</div>":"")}).join("")}
-function vlab(r){return FORM.coll=="modelos"?(r.v===0?"fixo":"↔"):(r.v===0?"fixo":r.v===2?"↔ larg.":"↔ comp.")}
+function vlab(r){return FORM.coll=="modelos"?(r.v===0?"fixo":(r.v===3?"↕ prof.":"↔")):(r.v===0?"fixo":r.v===2?"↔ larg.":"↔ comp.")}
 function rowHtml(i,r){return '<div style="display:grid;grid-template-columns:1fr 1fr .8fr auto;gap:6px;margin-top:6px"><input data-fr="'+i+':w" inputmode="decimal" placeholder="Largura" value="'+esc(r.w)+'"><input data-fr="'+i+':l" inputmode="decimal" placeholder="Tamanho" value="'+esc(r.l)+'"><input data-fr="'+i+':q" inputmode="numeric" placeholder="Qtd" value="'+esc(r.q)+'">'+(FORM.sz?'<span></span>':'<button data-vt="'+i+'">'+vlab(r)+"</button>")+"</div>"}
 function formHtml(coll){var v=FORM.v,mad=v.mat=="mad",md=coll=="modelos";
 return '<div class="card v np" style="margin:10px 0 0"><div class="row"><button class="ch'+(mad?"":" on")+'" data-mat="mdf">MDF</button><button class="ch'+(mad?" on":"")+'" data-mat="mad">Madeira</button></div>'
 +(md?'<label>Local (encosto, caixa, assento...)</label><input data-fd="loc" list="lloc" value="'+esc(v.loc||"")+'"><datalist id="lloc"><option value="Encosto"><option value="Caixa"><option value="Assento"></datalist>':"")
-+'<label style="margin-top:8px">Largura, tamanho (cm) e quantidade'+(FORM.sz?" exatas para este tamanho de braço. Informe a medida real de cada peça.":md?" por módulo de 1 m (100 cm). O botão ↔ faz o tamanho acompanhar a largura do módulo; toque nele para deixar fixo.":" por braço, para um braço de 20 cm de largura. O botão ao lado muda como a peça acompanha a largura do braço: ↔ comp. (o comprimento), ↔ larg. (a largura da peça) ou fixo.")+'</label><div id="frows">'+FORM.rows.map(function(r,i){return rowHtml(i,r)}).join("")+"</div>"
++'<label style="margin-top:8px">Largura, tamanho (cm) e quantidade'+(FORM.sz?" exatas para este tamanho de braço. Informe a medida real de cada peça.":md?" por módulo de 1 m (100 cm). O botão ↔ faz o tamanho acompanhar a largura do módulo; toque nele para trocar: ↕ prof. faz a peça acompanhar a profundidade (só muda na chaise) e fixo mantém a medida.":" por braço, para um braço de 20 cm de largura. O botão ao lado muda como a peça acompanha a largura do braço: ↔ comp. (o comprimento), ↔ larg. (a largura da peça) ou fixo.")+'</label><div id="frows">'+FORM.rows.map(function(r,i){return rowHtml(i,r)}).join("")+"</div>"
 +(FORM.sz?"":'<label style="margin-top:8px">Quantidade por largura (opcional)</label><input data-fd="fx" placeholder="ex.: 15=2; 10=1" value="'+esc(v.fx||"")+'"><div class="s">Escreva largura mínima=quantidade, separados por ponto e vírgula. Ex.: 15=2; 10=1 significa: a partir de 15 cm usa 2, a partir de 10 cm usa 1, abaixo disso não usa. Vale para a largura '+(md?"do módulo":"do braço")+'.</div>')+'<div class="warn" id="fmsg"></div><div class="row" style="margin-top:8px"><button class="p" data-fa="save">'+(FORM.i<0?"Adicionar":"Salvar")+'</button><button data-fa="cancel">Cancelar</button>'+(FORM.i>=0?'<button data-fa="del">Excluir</button>':"")+"</div></div>"}
 var SZO={};
 function secHead(key,title,sub){var o=EXP[key];return '<button class="li" data-cgrp="'+key+'"><b>'+title+'<span style="float:right;font-size:1rem;color:inherit">'+(o?"▾":"▸")+"</span></b><span>"+sub+"</span></button>"}
@@ -336,7 +353,7 @@ var to=EXP["sec:tecidos"];
 h+='<div class="card">'+secHead("sec:tecidos","Tecidos",CAT.tec.length+" cadastrado(s)")+(to?'<p class="s" style="margin-top:8px">Lista que aparece na escolha de tecido do pedido.</p><div class="row np"><input id="new_tecidos" placeholder="Nome (ex.: Suede cinza)" style="flex:1"><button class="p" data-cadd="tecidos">Adicionar</button></div><div class="lst">'+CAT.tec.map(function(c){return '<div class="kv" style="align-items:center"><span>'+esc(c.nome)+'</span><button data-cdel="tecidos:'+c.id+'">Excluir</button></div>'}).join("")+"</div>":"")+"</div>";
 $("tabD").innerHTML=h}
 function printCuts(){clearPR();var p=mpd(),mod=catFind(CAT.mod,p.modelo);if(mod)(mod.pecas||[]).forEach(function(it){EXP[p.id+":cm:"+nm((it.loc||"").trim()||"Peça")]=true});FORM=null;render();setTimeout(function(){try{window.print()}catch(e){}},150)}
-function editItem(coll,cid,i){var c=catById(coll,cid),it=c&&plist(coll,c)[i];if(!it)return;FORM={sz:!!(coll=="bracos"&&c.tams),coll:coll,cid:cid,i:i,v:{loc:it.loc||"",mat:it.mat,fx:it.fx||""},rows:[{w:it.w,l:it.l,q:it.q,v:it.v===0?0:(it.v===2?2:1)}]};render();var el=$("frows");if(el&&el.scrollIntoView)el.scrollIntoView({block:"center",behavior:"smooth"})}
+function editItem(coll,cid,i){var c=catById(coll,cid),it=c&&plist(coll,c)[i];if(!it)return;FORM={sz:!!(coll=="bracos"&&c.tams),coll:coll,cid:cid,i:i,v:{loc:it.loc||"",mat:it.mat,fx:it.fx||""},rows:[{w:it.w,l:it.l,q:it.q,v:it.v===0?0:(it.v===2?2:(it.v===3?3:1))}]};render();var el=$("frows");if(el&&el.scrollIntoView)el.scrollIntoView({block:"center",behavior:"smooth"})}
 var SW=null;
 document.addEventListener("pointerdown",function(e){if(!EDIT)return;var fg=e.target.closest&&e.target.closest(".fg[data-sw]");if(!fg)return;
 document.querySelectorAll(".fg[data-sw]").forEach(function(x){if(x!==fg){x.style.transform="";x.removeAttribute("data-open")}});
@@ -380,14 +397,14 @@ var gr=g("data-grp");if(gr){EXP[gr]=!EXP[gr];render();return true}
 var cg=g("data-cgrp");if(cg){EXP[cg]=!EXP[cg];FORM=null;render();return true}
 var ca=g("data-cadd");if(ca){if(EDIT){var inp=$("new_"+ca),nv=inp.value.trim();if(nv){var id="c"+Date.now();setDoc(doc(DB,ca,id),ca=="bracos"?{nome:nv,pecas:[],tams:[]}:{nome:nv,pecas:[]});inp.value="";EXP["cat:"+id]=true}}return true}
 var cr=g("data-cren");if(cr){if(EDIT){var qr=cr.split(":"),cc=catById(qr[0],qr[1]);if(cc){var nn=prompt("Novo nome:",cc.nome);if(nn){nn=nn.trim();var ex=catFind(catList(qr[0]),nn);if(!nn||nn==cc.nome){}else if(ex&&ex.id!=cc.id)alert("Já existe um item com esse nome.");else{var old=cc.nome,fld=qr[0]=="modelos"?"modelo":"braco";cc.nome=nn;saveCat(qr[0],cc.id);S.pedidos.forEach(function(p){if(!p.ph&&nm(p[fld])==nm(old)){var u={};u[fld]=nn;updateDoc(doc(DB,"pedidos",p.id),u).catch(function(){})}})}}}}return true}
-var cp=g("data-ccopy");if(cp){if(EDIT){var qc=cp.split(":"),c0=catById(qc[0],qc[1]);if(c0){var nn2=prompt("Nome do novo braço (cópia de "+c0.nome+", com todos os tamanhos):",c0.nome+" cópia");if(nn2){nn2=nn2.trim();if(!nn2)return true;if(catFind(CAT.br,nn2))alert("Já existe um braço com esse nome.");else{var id2="c"+Date.now();(function(){var o={nome:nn2,pecas:JSON.parse(JSON.stringify(c0.pecas||[]))};if(c0.tams)o.tams=JSON.parse(JSON.stringify(c0.tams));setDoc(doc(DB,"bracos",id2),o)})();EXP["cat:"+id2]=true}}}}return true}
+var cpy=g("data-ccopy");if(cpy){if(EDIT){var qc=cpy.split(":"),c0=catById(qc[0],qc[1]);if(c0){var nn2=prompt("Nome do novo braço (cópia de "+c0.nome+", com todos os tamanhos):",c0.nome+" cópia");if(nn2){nn2=nn2.trim();if(!nn2)return true;if(catFind(CAT.br,nn2))alert("Já existe um braço com esse nome.");else{var id2="c"+Date.now();(function(){var o={nome:nn2,pecas:JSON.parse(JSON.stringify(c0.pecas||[]))};if(c0.tams)o.tams=JSON.parse(JSON.stringify(c0.tams));setDoc(doc(DB,"bracos",id2),o)})();EXP["cat:"+id2]=true}}}}return true}
 var ct=g("data-ctams");if(ct){if(EDIT){var cT=catById("bracos",ct);if(cT&&!cT.tams&&confirm("Converter para tamanhos? As peças atuais viram o tamanho de 20 cm. Pedidos com outra largura ficarão sem braço no corte até você cadastrar o tamanho.")){cT.tams=[{w:20,pecas:cT.pecas||[]}];cT.pecas=[];SZ[ct]=20;SZO[ct]=20;saveCat("bracos",ct);render()}}return true}
 var ts=g("data-tsel");if(ts){var qs=ts.split(":");if(SZO[qs[0]]==+qs[1])delete SZO[qs[0]];else{SZO[qs[0]]=+qs[1];SZ[qs[0]]=+qs[1]}FORM=null;render();return true}
 var ta=g("data-tadd");if(ta){if(EDIT){var cA=catById("bracos",ta);if(cA&&cA.tams){var wa=parseInt(prompt("Largura do novo tamanho (cm, número inteiro):"),10);if(wa>0){if(cA.tams.some(function(t){return t.w==wa}))alert("Esse tamanho já existe.");else{cA.tams.push({w:wa,pecas:[]});cA.tams.sort(function(x,y){return y.w-x.w});SZ[ta]=wa;SZO[ta]=wa;FORM=null;saveCat("bracos",ta);render()}}}}return true}
 var tc=g("data-tcopy");if(tc){if(EDIT){var cC=catById("bracos",tc),sC=cC&&szSel(cC);if(sC){var wc=parseInt(prompt("Copiar as peças de "+sC.w+" cm para qual largura (cm)?"),10);if(wc>0){if(cC.tams.some(function(t){return t.w==wc}))alert("Esse tamanho já existe. Exclua ou edite ele.");else{cC.tams.push({w:wc,pecas:JSON.parse(JSON.stringify(sC.pecas))});cC.tams.sort(function(x,y){return y.w-x.w});SZ[tc]=wc;SZO[tc]=wc;FORM=null;saveCat("bracos",tc);render()}}}}return true}
 var tx=g("data-tdel");if(tx){if(EDIT){var cX=catById("bracos",tx),sX=cX&&szSel(cX);if(sX&&confirm("Excluir o tamanho de "+sX.w+" cm e as peças dele?")){cX.tams=cX.tams.filter(function(t){return t!==sX});delete SZ[tx];delete SZO[tx];FORM=null;saveCat("bracos",tx);render()}}return true}
 var cd=g("data-cdel");if(cd){if(EDIT&&confirm(cd.indexOf("tecidos")==0?"Excluir este tecido da lista?":"Excluir? Isso não afeta pedidos já lançados, mas eles deixam de calcular as madeiras.")){var qd=cd.split(":");deleteDoc(doc(DB,qd[0],qd[1]));FORM=null}return true}
-var vt=g("data-vt");if(vt!==null&&FORM){var rr=FORM.rows[+vt];rr.v=FORM.coll=="modelos"?(rr.v===0?1:0):(rr.v===0?1:rr.v===2?0:2);render();return true}
+var vt=g("data-vt");if(vt!==null&&FORM){var rr=FORM.rows[+vt];rr.v=FORM.coll=="modelos"?(rr.v===0?1:(rr.v===3?0:3)):(rr.v===0?1:rr.v===2?0:2);render();return true}
 var d2=g("data-del2");if(d2){if(EDIT){var q2=d2.split(":"),c2=catById(q2[0],q2[1]);if(c2){plist(q2[0],c2).splice(+q2[2],1);saveCat(q2[0],q2[1])}render()}return true}
 var a=g("data-add");if(a){if(EDIT){var q3=a.split(":");FORM={sz:!!(q3[0]=="bracos"&&catById(q3[0],q3[1]).tams),coll:q3[0],cid:q3[1],i:-1,v:{loc:"",mat:"mdf"},rows:[{w:"",l:"",q:1,v:1}]};render()}return true}
 var m=g("data-mat");if(m){if(FORM){FORM.v.mat=m;render()}return true}
@@ -395,7 +412,7 @@ var fa=g("data-fa");
 if(fa&&FORM){var c3=catById(FORM.coll,FORM.cid);if(!c3){FORM=null;render();return true}
 if(fa=="cancel"){FORM=null;render();return true}
 if(fa=="del"){plist(FORM.coll,c3).splice(FORM.i,1);saveCat(FORM.coll,FORM.cid);FORM=null;render();return true}
-var v=FORM.v,its=[];FORM.rows.forEach(function(r){var w=num(r.w),l=num(r.l);if(w>0&&l>0)its.push({loc:FORM.coll=="modelos"?(v.loc||""):"",mat:v.mat,w:w,l:l,q:num(r.q)||1,v:r.v===0?0:(r.v===2?2:1),fx:FORM.sz?"":(v.fx||"").trim()})});
+var v=FORM.v,its=[];FORM.rows.forEach(function(r){var w=num(r.w),l=num(r.l);if(w>0&&l>0)its.push({loc:FORM.coll=="modelos"?(v.loc||""):"",mat:v.mat,w:w,l:l,q:num(r.q)||1,v:r.v===0?0:(r.v===2?2:(r.v===3?3:1)),fx:FORM.sz?"":(v.fx||"").trim()})});
 if(!its.length){$("fmsg").textContent="Informe a largura e o tamanho.";return true}
 var PL=plist(FORM.coll,c3);if(FORM.i<0)its.forEach(function(it){PL.push(it)});else PL[FORM.i]=its[0];
 if(FORM.coll=="modelos")EXP["cg:"+FORM.cid+":"+nm((v.loc||"").trim()||"Peça")]=true;saveCat(FORM.coll,FORM.cid);FORM=null;render();return true}
@@ -433,6 +450,7 @@ $("nv").hidden=!EDITP;var edn=EDITP&&EDITING==p.id&&!p.ph;$("edb").hidden=!(EDIT
 var rf=p.tp=="ref";$("tpbar").innerHTML='<button class="ch'+(!rf?" on":"")+'" data-tp="novo"'+(edn?"":" disabled")+'>Sofá novo</button><button class="ch'+(rf?" on":"")+'" data-tp="ref"'+(edn?"":" disabled")+'>Reforma</button>';
 $("novoBox").hidden=rf;$("vh").hidden=rf;if(rf)$("all").setAttribute("hidden","");else $("all").removeAttribute("hidden");$("wn").hidden=rf;$("tecN").innerHTML=rf?"":tecHtml(p,edn);$("tecR").innerHTML=rf?tecHtml(p,edn):"";
 document.querySelectorAll("[data-k]").forEach(function(e){e.value=p[e.getAttribute("data-k")];e.disabled=!edn});
+$("chk").checked=!!p.ch;$("chk").disabled=!edn;$("chBox").hidden=!p.ch;if(!p.chw)$("chw").value="";$("chlw").hidden=!!p.ch&&geo(p).cq==2;
 function opts(k){var u={};S.pedidos.forEach(function(q){if(q[k])u[q[k]]=1});return Object.keys(u).map(function(v){return '<option value="'+esc(v)+'">'}).join("")}
 fillSel("modelo",CAT.mod,p.modelo);fillSel("braco",CAT.br,p.braco);
 drawAll();
@@ -447,7 +465,7 @@ pr.then(function(){$("sv").textContent="Salvo."},function(){$("sv").textContent=
 function wrap(s,n){var out=[],cur="";String(s).split(/\s+/).forEach(function(w){if((cur+" "+w).trim().length>n){out.push(cur);cur=w}else cur=(cur+" "+w).trim()});if(cur)out.push(cur);return out}
 function imgSvg(p){
 var g=geo(p),W=800,y=0,o="",r=topView(g,HEX),ob=p.obs?wrap(p.obs,46):[];
-var rows=p.tp=="ref"?[["Tipo","Reforma"],["Tecido",p.tec||"—"]]:[["Modelo",p.modelo],["Tipo de braço",p.braco],["Módulos",g.m+" de "+fm(g.mw)+" cm"],["Braços",g.b+" de "+fm(g.bw)+" cm"],["Tamanho total",fm(g.t)+" cm"],["Tecido",p.tec||"—"]];
+var rows=p.tp=="ref"?[["Tipo","Reforma"],["Tecido",p.tec||"—"]]:[["Modelo",p.modelo],["Tipo de braço",p.braco],["Módulos",mTxt(g," de ")],["Braços",g.b+" de "+fm(g.bw)+" cm"],["Tamanho total",fm(g.t)+" cm"],["Tecido",p.tec||"—"]];
 function T(x,y,s,sz,w,c){return '<text x="'+x+'" y="'+y+'" font-size="'+sz+'" font-weight="'+w+'" fill="'+c+'" font-family="Helvetica,Arial,sans-serif">'+esc(s)+"</text>"}
 y=120;rows.forEach(function(q){o+=T(40,y,q[0],20,400,"#6f7c7a")+T(250,y,q[1],24,700,"#26302f");y+=42});
 if(ob.length){y+=10;o+=T(40,y,"Observação",20,400,"#6f7c7a");ob.forEach(function(l){y+=32;o+=T(40,y,l,24,400,"#26302f")});y+=20}
@@ -467,6 +485,7 @@ $("sh").addEventListener("click",function(){var p=cp(),st=$("sh2");
 if(PNG){doShare(p,PNG);return}
 st.textContent="Gerando imagem…";toPng(p,function(b){st.textContent="";if(!b){st.textContent="Não foi possível gerar a imagem.";return}doShare(p,b)})});
 document.addEventListener("change",function(e){var t=e.target,k=t.getAttribute&&t.getAttribute("data-k");
+if(t.id=="chk"){var pq0=cp();if(EDITP&&pq0&&!pq0.ph&&EDITING==pq0.id){pq0.ch=t.checked;render()}return}
 if(t.id=="fin"&&t.files&&t.files[0]){upFoto(t.files[0]);t.value="";return}
 if(t.id=="finr"&&t.files&&t.files[0]){upFotoR(t.files[0]);t.value="";return}
 var tc=t.getAttribute&&t.getAttribute("data-tc");if(tc){var pq=cp();if(EDITP&&pq&&!pq.ph&&EDITING==pq.id){if(t.value=="__o"){pq.tecO=true;pq.tec=""}else{pq.tecO=false;pq.tec=t.value}render()}return}
@@ -488,7 +507,7 @@ if(!String(p.nome||"").trim()){m.textContent="Informe o cliente.";return}
 var nov=DRAFT&&DRAFT.id==p.id,ev={e:"p",a:nov?"criado":"editado",t:Date.now(),n:ME?ME.nome:"",u:ME?ME.uid:""};m.textContent="Salvando…";
 if(nov){try{var id=p.id;await runTransaction(DB,async function(tx){var cr=doc(DB,"meta","contador"),sn=await tx.get(cr),k=(sn.exists()?sn.data().n:0)+1;p.num=k;p.hist=[ev];p.cr=Date.now();var d=JSON.parse(JSON.stringify(p));delete d.id;tx.set(cr,{n:k});tx.set(doc(DB,"pedidos",id),d)});DRAFT=null;EDITING=null;m.textContent="Salvo.";render()}catch(e){var cd=e&&e.code||"erro";m.textContent="Não foi possível criar o pedido ("+cd+"). "+(cd=="permission-denied"?"Sem permissão.":cd=="resource-exhausted"?"Limite diário do Firebase atingido.":"Confira a internet e tente de novo.")}return}
 p.hist=(p.hist||[]).concat([ev]);EDITING=null;ORIG="";m.textContent="Salvo.";render();
-updateDoc(doc(DB,"pedidos",p.id),{tp:p.tp||"novo",tec:p.tec||"",tecO:!!p.tecO,nome:p.nome,mods:p.mods,bracos:p.bracos,mw:p.mw,bw:p.bw,modelo:p.modelo||"",braco:p.braco||"",obs:p.obs||"",hist:arrayUnion(ev)}).catch(function(e){$("sv").textContent="Não foi possível salvar a edição ("+(e&&e.code||"erro")+")."})});$("mb").addEventListener("click",function(){openD(true)});$("dx").addEventListener("click",function(){openD(false)});$("ov").addEventListener("click",function(){openD(false)});
+updateDoc(doc(DB,"pedidos",p.id),{tp:p.tp||"novo",tec:p.tec||"",tecO:!!p.tecO,nome:p.nome,mods:p.mods,bracos:p.bracos,mw:p.mw,bw:p.bw,modelo:p.modelo||"",braco:p.braco||"",obs:p.obs||"",ch:!!p.ch,chq:num(p.chq)||1,chp:num(p.chp)||0,chl:p.chl=="e"?"e":"d",chw:num(p.chw)||0,hist:arrayUnion(ev)}).catch(function(e){$("sv").textContent="Não foi possível salvar a edição ("+(e&&e.code||"erro")+")."})});$("mb").addEventListener("click",function(){openD(true)});$("dx").addEventListener("click",function(){openD(false)});$("ov").addEventListener("click",function(){openD(false)});
 $("ex").addEventListener("click",function(){var p=cp(),b=$("ex");if(!p||p.ph||EDITING==p.id)return;
 if(b.getAttribute("data-c")!="1"){b.setAttribute("data-c","1");b.textContent="Toque de novo para excluir";setTimeout(function(){b.removeAttribute("data-c");b.textContent="Excluir pedido"},4000);return}
 b.removeAttribute("data-c");b.textContent="Excluir pedido";var id=p.id;S.pedidos=S.pedidos.filter(function(q){return q.id!=id});ensurePh();S.atual=S.pedidos[S.pedidos.length-1].id;render();deleteDoc(doc(DB,"pedidos",id));deleteDoc(doc(DB,"fotos",id));deleteDoc(doc(DB,"fotosr",id))});
