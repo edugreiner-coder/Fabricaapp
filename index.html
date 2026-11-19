@@ -53,7 +53,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20}
 .dr{position:fixed;top:0;left:0;bottom:0;width:min(88vw,340px);background:var(--card);z-index:21;box-sizing:border-box;padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,.25)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.ch{padding:4px 9px;border-radius:99px;font-size:.75rem}.ch.on{background:var(--teal);border-color:var(--teal);color:#fff}
-.po{display:none}#ficha{display:none}.fic{width:138mm;max-width:100%;color:#000;font:10pt/1.3 Helvetica,Arial,sans-serif;border-bottom:1px dashed #000;padding-bottom:3mm}.fic .fh{display:flex;justify-content:space-between;font-size:9pt;border-bottom:1px solid #000;padding-bottom:1mm}.fic .fn{font-size:16pt;font-weight:700;margin:2mm 0;line-height:1.15}.fic .fg{display:grid;grid-template-columns:1fr 1fr;gap:.6mm 6mm}.fic .fk{color:#444;font-size:9pt}.fic .fo{margin-top:1.5mm;font-size:9pt}.tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px}.tbl th,.tbl td{border:1px solid var(--bd);padding:5px 6px;text-align:left;vertical-align:top}.tbl th{background:var(--bg)}
+.po{display:none}#all,#all2{overflow:visible}body{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)}#ficha{display:none}.fic{width:138mm;max-width:100%;color:#000;font:10pt/1.3 Helvetica,Arial,sans-serif;border-bottom:1px dashed #000;padding-bottom:3mm}.fic .fh{display:flex;justify-content:space-between;font-size:9pt;border-bottom:1px solid #000;padding-bottom:1mm}.fic .fn{font-size:16pt;font-weight:700;margin:2mm 0;line-height:1.15}.fic .fg{display:grid;grid-template-columns:1fr 1fr;gap:.6mm 6mm}.fic .fk{color:#444;font-size:9pt}.fic .fo{margin-top:1.5mm;font-size:9pt}.tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px}.tbl th,.tbl td{border:1px solid var(--bd);padding:5px 6px;text-align:left;vertical-align:top}.tbl th{background:var(--bg)}
 @media print{.np{display:none!important}body{padding:0}.card{border:0;padding:0}input,textarea{border:0;padding:0}body.pr-rep{background:#fff;color:#000}body.pr-rep>*:not(#rep){display:none!important}body.pr-rep #rep{display:block!important;color:#000}body.pr-rep .so{display:none!important}body.pr-rep .po{display:block!important}body.pr-rep .tbl th,body.pr-rep .tbl td{border:1px solid #888;color:#000}body.pr-rep .tbl th{background:#eee!important}body.pr-rep .kv span,body.pr-rep .s{color:#333}body.pr-rep .tbl tr{page-break-inside:avoid}body.pr-fic{background:#fff}body.pr-fic>*:not(#ficha){display:none!important}body.pr-fic #ficha{display:block!important}@page{margin:7mm}}
 </style>
 </head>
@@ -179,11 +179,11 @@ if(g.aR)arm(x);
 var Y=D+fs*1.8,L='<line x1="X1" y1="Y1" x2="X2" y2="Y2" stroke="'+C.ink+'" stroke-width="1.5" vector-effect="non-scaling-stroke"/>';
 function ln(a,b,c,d){return L.replace("X1",a).replace("Y1",b).replace("X2",c).replace("Y2",d)}
 o+=ln(0,Y,g.t,Y)+ln(0,Y-fs*.5,0,Y+fs*.5)+ln(g.t,Y-fs*.5,g.t,Y+fs*.5)+tx(g.t/2,Y+fs*1.6,"Total: "+fm(g.t)+" cm");
-var x0=-fs,x1=g.t+fs;
+var x0=-fs*1.3,x1=g.t+fs*1.3;
 if(g.cq){var dr=g.cR,xs=dr?g.t+fs*1.5:-fs*1.5,xe=dr?g.t-(g.aR&&!g.eR?g.bw:0):(g.aL&&!g.eL?g.bw:0);
 o+=ln(xs,0,xs,g.cd)+ln(xs-fs*.5,0,xs+fs*.5,0)+ln(xs-fs*.5,g.cd,xs+fs*.5,g.cd)+L.replace("<line",'<line stroke-dasharray="4 3"').replace("X1",xe).replace("Y1",g.cd).replace("X2",xs).replace("Y2",g.cd)+tx(dr?xs+fs*1.25:xs-fs*.35,g.cd/2,"Prof. "+fm(g.cd)+" cm",1);
 if(dr)x1=g.t+fs*3;else x0=-fs*3}
-return{inner:o,vb:[x0,-fs,x1-x0,Y+fs*3.2]}}
+return{inner:o,vb:[x0,-fs*1.3,x1-x0,Y+fs*4.4]}}
 function paint(svg,g){if(g.t<=0||g.mw<=0){svg.innerHTML="";return false}var r=topView(g,VAR);svg.setAttribute("viewBox",r.vb.join(" "));svg.innerHTML=r.inner;return true}
 function drawAll(){var g=geo(cp());$("tam").value=fm(g.t);if($("chn"))$("chn").textContent=chNote(g);$("wn").textContent=paint($("all"),g)?"":"Preencha as medidas do módulo.";prep()}
 function inRangeT(c){if(FIL=="m"){var a=D1?new Date(D1+"T00:00:00").getTime():0,b=D2?new Date(D2+"T23:59:59").getTime():Infinity;return c>=a&&c<=b}
