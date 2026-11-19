@@ -89,6 +89,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div><label for="chw">Largura</label><input id="chw" data-k="chw" data-n="1" inputmode="decimal" placeholder="= módulo"></div>
 </div>
 <div id="chlw"><label for="chl" style="margin-top:8px">Lado da chaise</label><select id="chl" data-k="chl"><option value="d">Direita</option><option value="e">Esquerda</option></select></div>
+<label for="chc" style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="chc" style="width:auto;margin:0;padding:0"> Chaise com encaixe (o assento avança até a lateral, rente ao braço)</label>
 <p class="s" id="chn"></p></div>
 <div id="tecN"></div>
 <div class="g2" style="margin-top:12px">
@@ -146,7 +147,7 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,createUser
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,getDoc,setDoc,deleteDoc,collection,onSnapshot,enableNetwork,waitForPendingWrites,runTransaction,updateDoc,arrayUnion} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const FBCFG={apiKey:"AIzaSyAzRYMn8rQiGn9AeCZWWzH4EtiEgeBvEW8",authDomain:"fabricaluxor.firebaseapp.com",projectId:"fabricaluxor",storageBucket:"fabricaluxor.firebasestorage.app",messagingSenderId:"414992232553",appId:"1:414992232553:web:62a4eb066bd0c4e9bf32f8"};
 var $=function(i){return document.getElementById(i)};
-function NP(){return{id:"p"+Date.now(),cr:Date.now(),cm:[],cb:[],st:{},sit:"aguard",num:0,por:"",en:{},hist:[],tp:"novo",tec:"",tecO:false,nome:"Novo pedido",mods:2,bracos:2,mw:130,mp:90,bw:15,bp:90,modelo:"Village",braco:"Quadrado",obs:"",ch:false,chq:1,chp:160,chl:"d",chw:""}}
+function NP(){return{id:"p"+Date.now(),cr:Date.now(),cm:[],cb:[],st:{},sit:"aguard",num:0,por:"",en:{},hist:[],tp:"novo",tec:"",tecO:false,nome:"Novo pedido",mods:2,bracos:2,mw:130,mp:90,bw:15,bp:90,modelo:"Village",braco:"Quadrado",obs:"",ch:false,chq:1,chp:160,chl:"d",chw:"",che:false}}
 function norm(p){var d=NP(),m=/^p(\d{10,})$/.exec(p.id||"");if(p.cr===undefined&&m)p.cr=+m[1];for(var k in d)if(p[k]===undefined)p[k]=d[k];return p}
 var first=NP();first.id="p1";first.nome="Pedido 1";
 var S={atual:"p1",pedidos:[first]},EDIT=false,EDITP=false,ROLE="",ME=null,DB=null,AUTH=null,ALLOWED=[],tms={},STARTED=false,ENED=null,ENORIG="",EDITING=null,DRAFT=null,ORIG="",FUN=null,FID=null,TAB="p",MSEL=null,DEPTH=90,PNG=null,pt,FIL="1",D1="",D2="";
@@ -156,33 +157,41 @@ function cp(){return byId(S.atual)}
 function num(x){var v=parseFloat(String(x).replace(",","."));return isNaN(v)?0:v}
 function fm(x){return (Math.round(x*10)/10).toString().replace(".",",")}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}
-function geo(p){var b=Math.min(2,Math.max(0,Math.round(num(p.bracos)))),m=Math.max(1,Math.round(num(p.mods))),cq=p.ch?Math.min(2,m,Math.max(1,Math.round(num(p.chq))||1)):0,mw=num(p.mw),bw=num(p.bw),cw=cq?(num(p.chw)||mw):0,cd=cq?(num(p.chp)||DEPTH):0,r=m-cq;
-return{b:b,m:m,r:r,cq:cq,cs:p.chl=="e"?"e":"d",cw:cw,cd:cd,mw:mw,mp:DEPTH,bw:bw,bp:DEPTH,t:r*mw+cq*cw+b*bw}}
-function mTxt(g,sep){var t=g.r?g.r+sep+fm(g.mw)+" cm":"";if(g.cq)t+=(t?" + ":"")+g.cq+" chaise"+(g.cq==1?" ("+(g.cs=="e"?"esquerda":"direita")+")":" (as duas pontas)")+": "+fm(g.cw)+" × "+fm(g.cd)+" cm";return t}
-function chNote(g){return g.cq?"Módulos é o total, inclui a chaise: "+(g.r?g.r+" módulo(s) comum(ns) + ":"")+g.cq+" chaise (profundidade "+fm(g.cd)+" cm).":""}
+function geo(p){var b=Math.min(2,Math.max(0,Math.round(num(p.bracos)))),m=Math.max(1,Math.round(num(p.mods))),cq=p.ch?Math.min(2,m,Math.max(1,Math.round(num(p.chq))||1)):0,mw=num(p.mw),bw=num(p.bw),cw=cq?(num(p.chw)||mw):0,cd=cq?(num(p.chp)||DEPTH):0,r=m-cq,cs=p.chl=="e"?"e":"d",ce=!!cq&&!!p.che,
+cL=cq==2||(cq==1&&cs=="e"),cR=cq==2||(cq==1&&cs=="d"),
+aL=b>=2||(b==1&&(cq==1?(ce?cs=="e":cs=="d"):true)),aR=b>=2||(b==1&&cq==1&&(ce?cs=="d":cs=="e"));
+return{b:b,m:m,r:r,cq:cq,cs:cs,cw:cw,cd:cd,mw:mw,mp:DEPTH,bw:bw,bp:DEPTH,t:r*mw+cq*cw+b*bw,ce:ce,cL:cL,cR:cR,aL:aL,aR:aR,eL:ce&&cL&&aL,eR:ce&&cR&&aR}}
+function mTxt(g,sep){var t=g.r?g.r+sep+fm(g.mw)+" cm":"";if(g.cq)t+=(t?" + ":"")+g.cq+" chaise"+(g.cq==1?" ("+(g.cs=="e"?"esquerda":"direita")+")":" (as duas pontas)")+": "+fm(g.cw)+" × "+fm(g.cd)+" cm"+(g.eL||g.eR?" (com encaixe)":"");return t}
+function chNote(g){if(!g.cq)return "";var t="Módulos é o total, inclui a chaise: "+(g.r?g.r+" módulo(s) comum(ns) + ":"")+g.cq+" chaise (profundidade "+fm(g.cd)+" cm).";if(g.ce&&!g.eL&&!g.eR)t+=" Encaixe não aplicado: precisa de braço do lado da chaise.";return t}
 function topView(g,C){
 var D=Math.max(g.mp,g.b?g.bp:0,g.cq?g.cd:0),fs=Math.max(g.t,D)/30,o="",x=0,i;
 function rc(X,w,h,c){return '<rect x="'+X+'" y="0" width="'+w+'" height="'+h+'" rx="'+fs*.3+'" fill="'+C[c]+'" stroke="'+C.ink+'" stroke-width="1.5" vector-effect="non-scaling-stroke"/>'}
 function tx(X,Y,s,r){return '<text x="'+X+'" y="'+Y+'" font-size="'+fs+'" font-weight="600" fill="'+C.ink+'" text-anchor="middle"'+(r?' transform="rotate(-90 '+X+" "+Y+')"':"")+">"+esc(s)+"</text>"}
 function arm(X){o+=rc(X,g.bw,g.bp,"wood2")+tx(X+g.bw/2+fs*.35,g.bp/2,fm(g.bw)+" cm",1)}
-var cl=g.cq==2||(g.cq==1&&g.cs=="e"),cr2=g.cq==2||(g.cq==1&&g.cs=="d"),aL=g.b>=2||(g.b==1&&!(g.cq==1&&g.cs=="e")),aR=g.b>=2||(g.b==1&&g.cq==1&&g.cs=="e");
-function chz(X){o+=rc(X,g.cw,g.cd,"wood")+tx(X+g.cw/2,g.mp/2+fs*.35,fm(g.cw)+" cm")+tx(X+g.cw/2,(g.cd>g.mp+fs*2.5?(g.mp+g.cd)/2:g.mp/2+fs*1.8)+fs*.35,"Chaise "+fm(g.cd))}
-if(aL){arm(0);x=g.bw}
-if(cl){chz(x);x+=g.cw}
+function chz(X,sd,en){var cdp=g.cd,pts=en?(sd=="L"?[[X,0],[X+g.cw,0],[X+g.cw,cdp],[X-g.bw,cdp],[X-g.bw,g.bp],[X,g.bp]]:[[X,0],[X+g.cw,0],[X+g.cw,g.bp],[X+g.cw+g.bw,g.bp],[X+g.cw+g.bw,cdp],[X,cdp]]):null;
+o+=en?'<polygon points="'+pts.map(function(q){return q[0]+","+q[1]}).join(" ")+'" fill="'+C.wood+'" stroke="'+C.ink+'" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>':rc(X,g.cw,cdp,"wood");
+o+=tx(X+g.cw/2,g.mp/2+fs*.35,fm(g.cw)+" cm")+tx(X+g.cw/2,(cdp>g.mp+fs*2.5?(g.mp+cdp)/2:g.mp/2+fs*1.8)+fs*.35,"Chaise")}
+if(g.aL){arm(0);x=g.bw}
+if(g.cL){chz(x,"L",g.eL);x+=g.cw}
 for(i=0;i<g.r;i++){o+=rc(x,g.mw,g.mp,"wood")+tx(x+g.mw/2,g.mp/2+fs*.35,fm(g.mw)+" cm");x+=g.mw}
-if(cr2){chz(x);x+=g.cw}
-if(aR)arm(x);
+if(g.cR){chz(x,"R",g.eR);x+=g.cw}
+if(g.aR)arm(x);
 var Y=D+fs*1.8,L='<line x1="X1" y1="Y1" x2="X2" y2="Y2" stroke="'+C.ink+'" stroke-width="1.5" vector-effect="non-scaling-stroke"/>';
 function ln(a,b,c,d){return L.replace("X1",a).replace("Y1",b).replace("X2",c).replace("Y2",d)}
 o+=ln(0,Y,g.t,Y)+ln(0,Y-fs*.5,0,Y+fs*.5)+ln(g.t,Y-fs*.5,g.t,Y+fs*.5)+tx(g.t/2,Y+fs*1.6,"Total: "+fm(g.t)+" cm");
-return{inner:o,vb:[-fs,-fs,g.t+2*fs,Y+fs*3.2]}}
+var x0=-fs,x1=g.t+fs;
+if(g.cq){var dr=g.cR,xs=dr?g.t+fs*1.5:-fs*1.5,xe=dr?g.t-(g.aR&&!g.eR?g.bw:0):(g.aL&&!g.eL?g.bw:0);
+o+=ln(xs,0,xs,g.cd)+ln(xs-fs*.5,0,xs+fs*.5,0)+ln(xs-fs*.5,g.cd,xs+fs*.5,g.cd)+L.replace("<line",'<line stroke-dasharray="4 3"').replace("X1",xe).replace("Y1",g.cd).replace("X2",xs).replace("Y2",g.cd)+tx(dr?xs+fs*1.25:xs-fs*.35,g.cd/2,"Prof. "+fm(g.cd)+" cm",1);
+if(dr)x1=g.t+fs*3;else x0=-fs*3}
+return{inner:o,vb:[x0,-fs,x1-x0,Y+fs*3.2]}}
 function paint(svg,g){if(g.t<=0||g.mw<=0){svg.innerHTML="";return false}var r=topView(g,VAR);svg.setAttribute("viewBox",r.vb.join(" "));svg.innerHTML=r.inner;return true}
 function drawAll(){var g=geo(cp());$("tam").value=fm(g.t);if($("chn"))$("chn").textContent=chNote(g);$("wn").textContent=paint($("all"),g)?"":"Preencha as medidas do módulo.";prep()}
-function inRange(q){if(q.ph)return false;var c=q.cr||0;
-if(FIL=="m"){var a=D1?new Date(D1+"T00:00:00").getTime():0,b=D2?new Date(D2+"T23:59:59").getTime():Infinity;return c>=a&&c<=b}
+function inRangeT(c){if(FIL=="m"){var a=D1?new Date(D1+"T00:00:00").getTime():0,b=D2?new Date(D2+"T23:59:59").getTime():Infinity;return c>=a&&c<=b}
 var s=new Date();s.setHours(0,0,0,0);s.setDate(s.getDate()-(+FIL-1));return c>=s.getTime()}
+function inRange(q){if(q.ph)return false;return inRangeT(q.cr||0)}
+function visivel(q){if(q.ph)return false;return !q.finAt||inRangeT(q.cr||0)||inRangeT(q.finAt)}
 function dt(t){var d=new Date(t||0);return ("0"+d.getDate()).slice(-2)+"/"+("0"+(d.getMonth()+1)).slice(-2)}
-function chipsR(){$("chips").innerHTML=[["1","Hoje"],["7","7 dias"],["15","15 dias"],["30","30 dias"],["m","Escolher"]].map(function(c){return '<button class="ch'+(FIL==c[0]?" on":"")+'" data-f="'+c[0]+'">'+c[1]+"</button>"}).join("");$("man").hidden=FIL!="m"}
+function chipsR(){$("chips").innerHTML=[["1","Hoje"],["7","7 dias"],["15","15 dias"],["30","30 dias"],["m","Escolher"]].map(function(c){return '<button class="ch'+(FIL==c[0]?" on":"")+'" data-f="'+c[0]+'">'+c[1]+"</button>"}).join("")+'<p class="s" style="flex-basis:100%;margin:2px 0 0">Em aberto: sempre aparecem. Finalizados: só no período escolhido.</p>';$("man").hidden=FIL!="m"}
 function openD(v){$("ov").hidden=!v;$("dr").hidden=!v}
 var ST={cm:"Corte madeira",mc:"Marcenaria",es:"Espumagem",cc:"Corte e costura",mf:"Montagem e finalização"};
 function ico(s,z,k){z=z||18;var h='<svg width="'+z+'" height="'+z+'" viewBox="0 0 20 20" style="display:inline-block;vertical-align:middle;flex:none;width:'+z+'px;height:'+z+'px">';
@@ -270,7 +279,7 @@ var tbl=rows.length?'<table class="tbl"><thead><tr>'+H.map(function(h){return "<
 var per2=RFL[RF]+" ("+dfull(R[0])+(RF=="1"||RF=="y"?"":" a "+dfull(R[1]))+")";
 el.innerHTML='<div class="card v"><div class="so"><h2>Relatório · '+nm0+'</h2><div class="chips">'+chips+'</div><div class="row"><button class="p" data-prrep="1">Imprimir relatório</button></div>'+(P?"":'<p class="s">Tempo trabalhado conta só o '+expT()+".</p>")+sm+(ls||'<p class="s">Nada neste período.</p>')+"</div>"
 +'<div class="po"><h2 style="color:#000;font-size:1.2rem">Fábrica Luxor · Relatório · '+nm0+'</h2><p class="s">'+per2+(P?"":" · tempo trabalhado conta só o "+expT())+"</p>"+sm+tbl+'<p class="s">Impresso em '+dtm(Date.now())+"</p></div></div>"}
-function lista(el,id){var L=S.pedidos.filter(function(q){return inRange(q)&&(TAB=="p"||aplic(q,TAB))});if(!L.length){el.innerHTML='<p class="s">Nenhum pedido neste período.</p>';return}el.innerHTML=L.slice().sort(function(a,b){if(TAB=="en"){var x=a.en&&a.en.dt?a.en.dt+(a.en.hr||"00:00"):"",y=b.en&&b.en.dt?b.en.dt+(b.en.hr||"00:00"):"";if(x&&y)return x<y?-1:x>y?1:0;if(x)return -1;if(y)return 1}return (b.cr||0)-(a.cr||0)}).map(function(q){var g=geo(q);
+function lista(el,id){var L=S.pedidos.filter(function(q){return visivel(q)&&(TAB=="p"||aplic(q,TAB))});if(!L.length){el.innerHTML='<p class="s">Nenhum pedido neste período.</p>';return}el.innerHTML=L.slice().sort(function(a,b){if(TAB=="en"){var x=a.en&&a.en.dt?a.en.dt+(a.en.hr||"00:00"):"",y=b.en&&b.en.dt?b.en.dt+(b.en.hr||"00:00"):"";if(x&&y)return x<y?-1:x>y?1:0;if(x)return -1;if(y)return 1}return (b.cr||0)-(a.cr||0)}).map(function(q){var g=geo(q);
 return '<button class="li'+(q.id==id?" on":"")+'" data-pick="'+q.id+'"><b>'+esc(tt(q))+'<span style="float:right">'+stIcons(q)+"</span></b><span>"+dt(q.cr)+" · "+(q.tp=="ref"?"Reforma"+(q.tec?" · "+esc(q.tec):""):g.m+" módulo(s)"+(g.cq?" c/ chaise":"")+" · "+g.b+" braço(s) · "+fm(g.t)+" cm · "+esc(q.modelo||""))+"</span>"+(TAB=="p"?'<span style="display:block;color:'+sitOf(q).c+';font-weight:600">'+sitOf(q).t+"</span>":"")+(TAB=="en"&&q.en&&q.en.dt?'<span style="display:block;color:var(--teal);font-weight:600">Entrega '+esc(dEnt(q.en))+"</span>":"")+"</button>"}).join("")}
 function detM(){var p=byId(MSEL||S.atual),g=geo(p);
 var rows=p.tp=="ref"?[["Pedido",p.num?pad(p.num):"—"],["Cliente",p.nome],["Tipo","Reforma"],["Tecido",p.tec||"—"],["Situação",sitOf(p).t]]:[["Pedido",p.num?pad(p.num):"—"],["Cliente",p.nome],["Modelo",p.modelo],["Tipo de braço",p.braco],["Módulos",mTxt(g," de ")],["Braços",g.b+" de "+fm(g.bw)+" cm"],["Tamanho total",fm(g.t)+" cm"],["Tecido",p.tec||"—"],["Situação",sitOf(p).t]];
@@ -300,7 +309,7 @@ var p=mpd();if(p.tp=="ref"){$("cuts").innerHTML='<div class="card"><p class="s">
 var g=geo(p),mod=catFind(CAT.mod,p.modelo),br=catFind(CAT.br,p.braco),T={mdf:0,mad:0},sub={cm:{mdf:0,mad:0},cb:{mdf:0,mad:0}};
 function row(it,W,ref,mult,k,dk,tag){var c=pcOf(it,W,ref,mult,dk);if(c.mdf){sub[k].mdf+=c.v;T.mdf+=c.v}else{sub[k].mad+=c.v;T.mad+=c.v}
 return '<div class="sw"><div class="fg"><b>'+(tag?tag+" · ":"")+(c.mdf?"MDF":"Madeira")+" · "+fm(c.w)+" × "+fm(c.l)+" cm</b><span>"+fm(c.q)+" × "+mult+" = "+fm(c.n)+" peça(s) · "+c.t+"</span></div></div>"}
-var h='<div class="card"><h2>Corte de madeira - Módulo</h2><p class="s">Modelo: '+esc(p.modelo||"(não informado)")+" · "+mTxt(g," de ")+"</p>";
+var h='<div class="card"><h2>Corte de madeira - Módulo</h2><p class="s">Modelo: '+esc(p.modelo||"(não informado)")+" · "+mTxt(g," de ")+"</p>"+(g.eL||g.eR?'<p class="s">Chaise com encaixe: o assento avança '+fm(g.bw)+' cm sobre a lateral do braço, na parte da frente (além de '+fm(g.bp)+' cm). Confira as peças dessa região.</p>':"");
 if(!mod)h+='<p class="s">Modelo não encontrado no cadastro.'+(EDIT?" Cadastre na aba Modelos.":"")+"</p>";
 else{var grp=[],map={};(mod.pecas||[]).forEach(function(it){var n0=(it.loc||"").trim()||"Peça",key=nm(n0);if(!map[key]){map[key]={nm:n0,rows:[],mdf:0,mad:0};grp.push(map[key])}var G=map[key];if(g.r>0){var c=pcOf(it,g.mw,100,g.r);G.rows.push(row(it,g.mw,100,g.r,"cm"));if(c.mdf)G.mdf+=c.v;else G.mad+=c.v}
 if(g.cq){var dk=g.cd/DEPTH,c2=pcOf(it,g.cw,100,g.cq,dk);G.rows.push(row(it,g.cw,100,g.cq,"cm",dk,"Chaise"));if(c2.mdf)G.mdf+=c2.v;else G.mad+=c2.v}});
@@ -450,7 +459,7 @@ $("nv").hidden=!EDITP;var edn=EDITP&&EDITING==p.id&&!p.ph;$("edb").hidden=!(EDIT
 var rf=p.tp=="ref";$("tpbar").innerHTML='<button class="ch'+(!rf?" on":"")+'" data-tp="novo"'+(edn?"":" disabled")+'>Sofá novo</button><button class="ch'+(rf?" on":"")+'" data-tp="ref"'+(edn?"":" disabled")+'>Reforma</button>';
 $("novoBox").hidden=rf;$("vh").hidden=rf;if(rf)$("all").setAttribute("hidden","");else $("all").removeAttribute("hidden");$("wn").hidden=rf;$("tecN").innerHTML=rf?"":tecHtml(p,edn);$("tecR").innerHTML=rf?tecHtml(p,edn):"";
 document.querySelectorAll("[data-k]").forEach(function(e){e.value=p[e.getAttribute("data-k")];e.disabled=!edn});
-$("chk").checked=!!p.ch;$("chk").disabled=!edn;$("chBox").hidden=!p.ch;if(!p.chw)$("chw").value="";$("chlw").hidden=!!p.ch&&geo(p).cq==2;
+$("chk").checked=!!p.ch;$("chk").disabled=!edn;$("chc").checked=!!p.che;$("chc").disabled=!edn;$("chBox").hidden=!p.ch;if(!p.chw)$("chw").value="";$("chlw").hidden=!!p.ch&&geo(p).cq==2;
 function opts(k){var u={};S.pedidos.forEach(function(q){if(q[k])u[q[k]]=1});return Object.keys(u).map(function(v){return '<option value="'+esc(v)+'">'}).join("")}
 fillSel("modelo",CAT.mod,p.modelo);fillSel("braco",CAT.br,p.braco);
 drawAll();
@@ -485,7 +494,7 @@ $("sh").addEventListener("click",function(){var p=cp(),st=$("sh2");
 if(PNG){doShare(p,PNG);return}
 st.textContent="Gerando imagem…";toPng(p,function(b){st.textContent="";if(!b){st.textContent="Não foi possível gerar a imagem.";return}doShare(p,b)})});
 document.addEventListener("change",function(e){var t=e.target,k=t.getAttribute&&t.getAttribute("data-k");
-if(t.id=="chk"){var pq0=cp();if(EDITP&&pq0&&!pq0.ph&&EDITING==pq0.id){pq0.ch=t.checked;render()}return}
+if(t.id=="chk"||t.id=="chc"){var pq0=cp();if(EDITP&&pq0&&!pq0.ph&&EDITING==pq0.id){if(t.id=="chk")pq0.ch=t.checked;else pq0.che=t.checked;render()}return}
 if(t.id=="fin"&&t.files&&t.files[0]){upFoto(t.files[0]);t.value="";return}
 if(t.id=="finr"&&t.files&&t.files[0]){upFotoR(t.files[0]);t.value="";return}
 var tc=t.getAttribute&&t.getAttribute("data-tc");if(tc){var pq=cp();if(EDITP&&pq&&!pq.ph&&EDITING==pq.id){if(t.value=="__o"){pq.tecO=true;pq.tec=""}else{pq.tecO=false;pq.tec=t.value}render()}return}
@@ -507,7 +516,7 @@ if(!String(p.nome||"").trim()){m.textContent="Informe o cliente.";return}
 var nov=DRAFT&&DRAFT.id==p.id,ev={e:"p",a:nov?"criado":"editado",t:Date.now(),n:ME?ME.nome:"",u:ME?ME.uid:""};m.textContent="Salvando…";
 if(nov){try{var id=p.id;await runTransaction(DB,async function(tx){var cr=doc(DB,"meta","contador"),sn=await tx.get(cr),k=(sn.exists()?sn.data().n:0)+1;p.num=k;p.hist=[ev];p.cr=Date.now();var d=JSON.parse(JSON.stringify(p));delete d.id;tx.set(cr,{n:k});tx.set(doc(DB,"pedidos",id),d)});DRAFT=null;EDITING=null;m.textContent="Salvo.";render()}catch(e){var cd=e&&e.code||"erro";m.textContent="Não foi possível criar o pedido ("+cd+"). "+(cd=="permission-denied"?"Sem permissão.":cd=="resource-exhausted"?"Limite diário do Firebase atingido.":"Confira a internet e tente de novo.")}return}
 p.hist=(p.hist||[]).concat([ev]);EDITING=null;ORIG="";m.textContent="Salvo.";render();
-updateDoc(doc(DB,"pedidos",p.id),{tp:p.tp||"novo",tec:p.tec||"",tecO:!!p.tecO,nome:p.nome,mods:p.mods,bracos:p.bracos,mw:p.mw,bw:p.bw,modelo:p.modelo||"",braco:p.braco||"",obs:p.obs||"",ch:!!p.ch,chq:num(p.chq)||1,chp:num(p.chp)||0,chl:p.chl=="e"?"e":"d",chw:num(p.chw)||0,hist:arrayUnion(ev)}).catch(function(e){$("sv").textContent="Não foi possível salvar a edição ("+(e&&e.code||"erro")+")."})});$("mb").addEventListener("click",function(){openD(true)});$("dx").addEventListener("click",function(){openD(false)});$("ov").addEventListener("click",function(){openD(false)});
+updateDoc(doc(DB,"pedidos",p.id),{tp:p.tp||"novo",tec:p.tec||"",tecO:!!p.tecO,nome:p.nome,mods:p.mods,bracos:p.bracos,mw:p.mw,bw:p.bw,modelo:p.modelo||"",braco:p.braco||"",obs:p.obs||"",ch:!!p.ch,chq:num(p.chq)||1,chp:num(p.chp)||0,chl:p.chl=="e"?"e":"d",chw:num(p.chw)||0,che:!!p.che,hist:arrayUnion(ev)}).catch(function(e){$("sv").textContent="Não foi possível salvar a edição ("+(e&&e.code||"erro")+")."})});$("mb").addEventListener("click",function(){openD(true)});$("dx").addEventListener("click",function(){openD(false)});$("ov").addEventListener("click",function(){openD(false)});
 $("ex").addEventListener("click",function(){var p=cp(),b=$("ex");if(!p||p.ph||EDITING==p.id)return;
 if(b.getAttribute("data-c")!="1"){b.setAttribute("data-c","1");b.textContent="Toque de novo para excluir";setTimeout(function(){b.removeAttribute("data-c");b.textContent="Excluir pedido"},4000);return}
 b.removeAttribute("data-c");b.textContent="Excluir pedido";var id=p.id;S.pedidos=S.pedidos.filter(function(q){return q.id!=id});ensurePh();S.atual=S.pedidos[S.pedidos.length-1].id;render();deleteDoc(doc(DB,"pedidos",id));deleteDoc(doc(DB,"fotos",id));deleteDoc(doc(DB,"fotosr",id))});
