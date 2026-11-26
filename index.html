@@ -53,7 +53,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20}
 .dr{position:fixed;top:0;left:0;bottom:0;width:min(88vw,340px);background:var(--card);z-index:21;box-sizing:border-box;padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,.25)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.ch{padding:4px 9px;border-radius:99px;font-size:.75rem}.ch.on{background:var(--teal);border-color:var(--teal);color:#fff}
-.po{display:none}#doc{display:none}.dc{color:#000;font:10pt/1.3 Helvetica,Arial,sans-serif;padding:2mm 3mm}.dc h1{font-size:17pt;margin:0;color:#000}.dc h2{font-size:10.5pt;margin:3mm 0 1mm;border-bottom:1px solid #000;padding-bottom:1mm;color:#000}.dc .dh{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #000;padding-bottom:2mm}.dc table{width:100%;border-collapse:collapse}.dc td{padding:.7mm 2mm;border-bottom:1px solid #bbb;vertical-align:top}.dc td:first-child{width:34%;color:#444}.dc .sg{break-inside:avoid;page-break-inside:avoid}.dc .ass{display:flex;gap:10mm;margin-top:12mm}.dc .ass div:only-child{flex:0 0 55%;margin-left:auto}.dc .ass div{flex:1;border-top:1px solid #000;text-align:center;padding-top:1mm;font-size:9.5pt}.dc .box{border:2px solid #000;padding:3mm;text-align:center;font-size:16pt;font-weight:700;margin:4mm 0}#all,#all2{overflow:visible}body{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)}#ficha{display:none}.fic{width:138mm;max-width:100%;color:#000;font:10pt/1.3 Helvetica,Arial,sans-serif;border-bottom:1px dashed #000;padding-bottom:3mm}.fic .fh{display:flex;justify-content:space-between;font-size:9pt;border-bottom:1px solid #000;padding-bottom:1mm}.fic .fn{font-size:16pt;font-weight:700;margin:2mm 0;line-height:1.15}.fic .fg{display:grid;grid-template-columns:1fr 1fr;gap:.6mm 6mm}.fic .fk{color:#444;font-size:9pt}.fic .fo{margin-top:1.5mm;font-size:9pt}.tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px}.tbl th,.tbl td{border:1px solid var(--bd);padding:5px 6px;text-align:left;vertical-align:top}.tbl th{background:var(--bg)}
+.po{display:none}#doc{display:none}.dc{color:#000;font:10pt/1.3 Helvetica,Arial,sans-serif;padding:2mm 3mm}.dc h1{font-size:17pt;margin:0;color:#000}.dc h2{font-size:10.5pt;margin:3mm 0 1mm;border-bottom:1px solid #000;padding-bottom:1mm;color:#000}.dc .dh{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #000;padding-bottom:2mm}.dc table{width:100%;border-collapse:collapse}.dc td{padding:.7mm 2mm;border-bottom:1px solid #bbb;vertical-align:top}.dc td:first-child{width:34%;color:#444}.dc .sg{break-inside:avoid;page-break-inside:avoid}.dc .ass{display:flex;gap:10mm;margin-top:12mm}.dc .ass div:only-child{flex:0 0 55%;margin-left:auto}.dc .ass div{position:relative;flex:1;border-top:1px solid #000;text-align:center;padding-top:1mm;font-size:9.5pt}.dc .box{border:2px solid #000;padding:3mm;text-align:center;font-size:16pt;font-weight:700;margin:4mm 0}#all,#all2{overflow:visible}body{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px)}#ficha{display:none}.fic{width:138mm;max-width:100%;color:#000;font:10pt/1.3 Helvetica,Arial,sans-serif;border-bottom:1px dashed #000;padding-bottom:3mm}.fic .fh{display:flex;justify-content:space-between;font-size:9pt;border-bottom:1px solid #000;padding-bottom:1mm}.fic .fn{font-size:16pt;font-weight:700;margin:2mm 0;line-height:1.15}.fic .fg{display:grid;grid-template-columns:1fr 1fr;gap:.6mm 6mm}.fic .fk{color:#444;font-size:9pt}.fic .fo{margin-top:1.5mm;font-size:9pt}.tbl{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px}.tbl th,.tbl td{border:1px solid var(--bd);padding:5px 6px;text-align:left;vertical-align:top}.tbl th{background:var(--bg)}
 @media print{.np{display:none!important}body{padding:0}.card{border:0;padding:0}input,textarea{border:0;padding:0}body.pr-rep{background:#fff;color:#000}body.pr-rep>*:not(#rep){display:none!important}body.pr-rep #rep{display:block!important;color:#000}body.pr-rep .so{display:none!important}body.pr-rep .po{display:block!important}body.pr-rep .tbl th,body.pr-rep .tbl td{border:1px solid #888;color:#000}body.pr-rep .tbl th{background:#eee!important}body.pr-rep .kv span,body.pr-rep .s{color:#333}body.pr-rep .tbl tr{page-break-inside:avoid}body.pr-fic{background:#fff}body.pr-fic>*:not(#ficha){display:none!important}body.pr-fic #ficha{display:block!important}body.pr-doc{background:#fff}body.pr-doc>*:not(#doc){display:none!important}body.pr-doc #doc{display:block!important}@page{margin:7mm}}
 </style>
 </head>
@@ -145,6 +145,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div class="lst" id="lst"></div>
 <div class="row" style="margin-top:12px"><button id="syn">Sincronizar</button><button id="out">Sair</button></div><p class="s" id="synm"></p>
 </aside>
+<div id="sgov" class="np" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:70;display:flex;align-items:center;justify-content:center;padding:12px"><div style="background:var(--card);color:var(--fg);width:min(96vw,640px);border-radius:14px;padding:12px"><h2 style="margin:0 0 6px">Assinatura da Luxor</h2><p class="s">Assine com o dedo na área abaixo.</p><canvas id="sgc" width="640" height="240" style="width:100%;height:auto;background:#fff;border:1px dashed var(--bd);border-radius:8px;touch-action:none"></canvas><div class="row" style="margin-top:8px"><button class="p" id="sgok">Salvar</button><button id="sgcl">Limpar</button><button id="sgx">Cancelar</button></div></div></div>
 <div id="doc"></div>
 <div id="ficha"></div>
 <div id="cfgov" class="np" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;display:flex;align-items:flex-end;justify-content:center"><div id="cfgsh" style="background:var(--card);color:var(--fg);width:100%;max-width:760px;max-height:88vh;overflow:auto;border-radius:16px 16px 0 0;padding:14px"></div></div>
@@ -402,6 +403,9 @@ if(g("data-prrep")){printRep();return true}
 if(g("data-ctsave")){ctDo("save");return true}
 if(g("data-ctpdf")){ctDo("pdf");return true}
 if(g("data-ctrec")){ctDo("rec");return true}
+if(g("data-sgdraw")){sgClear();$("sgov").hidden=false;return true}
+if(g("data-sgfile")){$("sgf").click();return true}
+if(g("data-sgdel")){if(confirm("Remover a assinatura da Luxor?"))deleteDoc(doc(DB,"contratos","_assinatura"));return true}
 var ctp=g("data-ctrp");if(ctp!==null){ctDo("rp",+ctp);return true}
 var ctd=g("data-ctrd");if(ctd!==null){ctDo("rdel",+ctd);return true}
 if(g("data-eqadd")){eqAdd();return true}
@@ -510,6 +514,8 @@ $("sh").addEventListener("click",function(){var p=cp(),st=$("sh2");
 if(PNG){doShare(p,PNG);return}
 st.textContent="Gerando imagem…";toPng(p,function(b){st.textContent="";if(!b){st.textContent="Não foi possível gerar a imagem.";return}doShare(p,b)})});
 document.addEventListener("change",function(e){var t=e.target,k=t.getAttribute&&t.getAttribute("data-k");
+if(t.id=="sgf"&&t.files&&t.files[0]){ctSgFile(t.files[0]);t.value="";return}
+if(t.id=="ctuse"){try{localStorage.setItem("ctass",t.checked?"1":"0")}catch(e){}return}
 var cbk={chk:"ch",chc:"che",ec:"ec",ep:"ep"}[t.id];if(cbk){var pq0=cp();if(EDITP&&pq0&&!pq0.ph&&EDITING==pq0.id){pq0[cbk]=t.checked;render()}return}
 if(t.id=="fin"&&t.files&&t.files[0]){upFoto(t.files[0]);t.value="";return}
 if(t.id=="finr"&&t.files&&t.files[0]){upFotoR(t.files[0]);t.value="";return}
@@ -671,14 +677,16 @@ if(mi)p.push(a(mi)+(mi==1?" milhão":" milhões"));if(mil)p.push(mil==1?"mil":a(
 var out=p[0];for(var i=1;i<p.length;i++)out+=((i==p.length-1&&(r<100||r%100==0))?" e ":" ")+p[i];return out}
 function ctExtV(v){v=Math.round((+v||0)*100)/100;var r=Math.floor(v),c=Math.round((v-r)*100),o="";if(r)o=ctExtN(r)+(r==1?" real":(r>=1e6&&r%1e6==0?" de reais":" reais"));if(c)o+=(o?" e ":"")+ctExtN(c)+(c==1?" centavo":" centavos");return o||"zero real"}
 function ctIso(d){d=d||new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+var CTLOC="Joaçaba",CTMES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+function ctLong(i){var a=String(i||ctIso()).split("-");return +a[2]+" de "+CTMES[+a[1]-1]+" de "+a[0]}
 function ctDt(i){var a=String(i||"").split("-");return a.length==3?a[2]+"/"+a[1]+"/"+a[0]:dfull(Date.now())}
 function ctGet(p){var d=CTR[p.id]||{},e=p.en||{};return{cpf:d.cpf||"",tel:d.tel||e.wa||"",end:d.end!==undefined?d.end:[e.rua,e.nr,e.bairro,e.cidade].filter(Boolean).join(", "),valor:+d.valor||0,ent:+d.ent||0,fe:d.fe||CTD.fe,fs:d.fs!==undefined?d.fs:CTD.fs,pz:d.pz!==undefined?d.pz:CTD.pz,gar:d.gar!==undefined?d.gar:CTD.gar,cl:d.cl!==undefined?d.cl:CTD.cl,recs:d.recs||[]}}
 function ctRead(){var v=function(i){return $(i).value.trim()};return{cpf:v("ctcpf"),tel:v("cttel"),end:v("ctend"),valor:ctPm(v("ctval")),ent:ctPm(v("ctent")),fe:$("ctfe").value,fs:v("ctfs"),pz:v("ctpz"),gar:v("ctgar"),cl:v("ctcl")}}
 function ctSub(){onSnapshot(collection(DB,"contratos"),function(sn){CTR={};CTERR=false;sn.forEach(function(d){CTR[d.id]=d.data()});if(TAB=="ct")ctUI()},function(){CTERR=true;if(TAB=="ct")ctUI(true)})}
 function ctUI(force){var el=$("tabC");if(!el||ROLE!="dono")return;var p=mpd();
 if(!p||p.ph){el.innerHTML='<div class="card"><h2>Contratos</h2><p class="s">Escolha um pedido no menu ☰ para gerar o contrato.</p></div>';CTSIG="";return}
-var sig=p.id+"|"+p.num+"|"+p.nome+"|"+CTERR+"|"+JSON.stringify(CTR[p.id]||null);if(!force&&sig==CTSIG&&el.innerHTML)return;CTSIG=sig;
-var c=ctGet(p),pago=c.recs.reduce(function(a,r){return a+(+r.v||0)},0),saldo=Math.max(0,c.valor-pago),opt=function(L,sel){return L.map(function(x){return '<option'+(x==sel?" selected":"")+">"+x+"</option>"}).join("")};
+var sig=p.id+"|"+p.num+"|"+p.nome+"|"+CTERR+"|"+JSON.stringify(CTR[p.id]||null)+"|"+(CTR._assinatura&&CTR._assinatura.img?CTR._assinatura.img.length:0);if(!force&&sig==CTSIG&&el.innerHTML)return;CTSIG=sig;
+var sgi0=CTR._assinatura&&CTR._assinatura.img||"",c=ctGet(p),pago=c.recs.reduce(function(a,r){return a+(+r.v||0)},0),saldo=Math.max(0,c.valor-pago),opt=function(L,sel){return L.map(function(x){return '<option'+(x==sel?" selected":"")+">"+x+"</option>"}).join("")};
 el.innerHTML=(CTERR?'<div class="warn" style="display:block">Sem permissão para ler os contratos. Publique a regra da coleção contratos no Firestore.</div>':"")
 +'<div class="card"><h2>Contrato · '+esc(tt(p))+'</h2><p class="s">Preencha, gere o PDF e envie ao cliente para assinar. Estes dados ficam só com o dono.</p>'
 +'<label for="ctcpf">CPF/CNPJ do cliente</label><input id="ctcpf" value="'+esc(c.cpf)+'" inputmode="numeric">'
@@ -690,15 +698,35 @@ el.innerHTML=(CTERR?'<div class="warn" style="display:block">Sem permissão para
 +'<label for="ctpz" style="margin-top:8px">Prazo de entrega</label><input id="ctpz" value="'+esc(c.pz)+'">'
 +'<label for="ctgar" style="margin-top:8px">Garantia</label><textarea id="ctgar" rows="3">'+esc(c.gar)+'</textarea>'
 +'<label for="ctcl" style="margin-top:8px">Condições gerais (aparecem no PDF)</label><textarea id="ctcl" rows="6">'+esc(c.cl)+'</textarea>'
++(sgi0?'<label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="ctuse" style="width:auto;margin:0;padding:0"'+(ctUse()?" checked":"")+'> Incluir a assinatura da Luxor nos PDFs</label>':"")
 +'<div class="row" style="margin-top:10px"><button class="p" data-ctpdf="1">Gerar PDF do pedido</button><button data-ctsave="1">Salvar dados</button></div><div class="warn" id="ctmsg" style="display:block;background:none;color:var(--mut)"></div></div>'
 +'<div class="card v"><h2>Recibos</h2>'
 +'<div class="kv"><span>Valor do pedido</span><b>'+ctBrl(c.valor)+'</b></div><div class="kv"><span>Total recebido</span><b>'+ctBrl(pago)+'</b></div><div class="kv"><span>Saldo</span><b>'+ctBrl(saldo)+'</b></div>'
 +c.recs.map(function(r,i){return '<div class="kv" style="align-items:center"><span>Recibo '+(p.num?pad(p.num):"—")+"-"+r.n+" · "+esc(r.tp)+" · "+ctDt(r.d)+'</span><b>'+ctBrl(r.v)+'</b></div><div class="row" style="margin:0 0 8px"><button data-ctrp="'+i+'">Imprimir</button><button data-ctrd="'+i+'">Excluir</button></div>'}).join("")
 +'<h3>Novo recibo</h3><div class="g2"><div><label for="ctrv">Valor recebido (R$)</label><input id="ctrv" value="'+(c.recs.length?"":(c.ent?c.ent.toLocaleString("pt-BR",{minimumFractionDigits:2}):""))+'" inputmode="decimal"></div><div><label for="ctrd">Data</label><input id="ctrd" type="date" value="'+ctIso()+'"></div></div>'
 +'<div class="g2" style="margin-top:8px"><div><label for="ctrt">Referente a</label><select id="ctrt">'+opt(CTTIPOS,c.recs.length?"Parcela":"Entrada")+'</select></div><div><label for="ctrf">Forma</label><select id="ctrf">'+opt(CTFORMAS,c.fe)+'</select></div></div>'
-+'<div class="row" style="margin-top:10px"><button class="p" data-ctrec="1">Gerar recibo</button></div></div>'}
++'<div class="row" style="margin-top:10px"><button class="p" data-ctrec="1">Gerar recibo</button></div></div>'
++'<div class="card"><h2>Assinatura da Luxor</h2>'+(sgi0?'<div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:6px;text-align:center"><img src="'+sgi0+'" style="max-height:70px;max-width:100%"></div>':'<p class="s">Nenhuma assinatura cadastrada. Cadastre uma vez e ela sai nos PDFs.</p>')
++'<div class="row" style="margin-top:8px"><button class="p" data-sgdraw="1">'+(sgi0?"Refazer":"Desenhar assinatura")+'</button><button data-sgfile="1">Enviar imagem</button>'+(sgi0?'<button data-sgdel="1">Remover</button>':"")+'</div><input type="file" id="sgf" accept="image/*" hidden></div>'}
+function ctUse(){try{return localStorage.getItem("ctass")!=="0"}catch(e){return true}}
+function ctSgGet(){var i=CTR._assinatura&&CTR._assinatura.img||"";return i&&ctUse()?i:""}
+function ctSgSave(d){return setDoc(doc(DB,"contratos","_assinatura"),{img:d,t:Date.now()}).catch(function(e){alert("Não foi possível salvar a assinatura ("+(e&&e.code||"erro")+").")})}
+function ctSgFile(f){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var w=Math.min(640,im.width),h=Math.round(im.height*w/im.width),c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);var d=c.toDataURL("image/png");if(d.length>700000)d=c.toDataURL("image/jpeg",.8);ctSgSave(d)};im.src=r.result};r.readAsDataURL(f)}
+var SGD=false,SGP=null,SGINK=false;
+function sgPos(e){var c=$("sgc"),r=c.getBoundingClientRect();return[(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]}
+function sgClear(){var c=$("sgc");c.getContext("2d").clearRect(0,0,c.width,c.height);SGINK=false}
+function sgExport(){var c=$("sgc"),x=c.getContext("2d"),im=x.getImageData(0,0,c.width,c.height).data,x0=c.width,y0=c.height,x1=0,y1=0;
+for(var y=0;y<c.height;y++)for(var xx=0;xx<c.width;xx++)if(im[(y*c.width+xx)*4+3]>0){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(y<y0)y0=y;if(y>y1)y1=y}
+if(x1<x0)return "";x0=Math.max(0,x0-8);y0=Math.max(0,y0-8);x1=Math.min(c.width,x1+8);y1=Math.min(c.height,y1+8);var o=document.createElement("canvas");o.width=x1-x0;o.height=y1-y0;o.getContext("2d").drawImage(c,x0,y0,o.width,o.height,0,0,o.width,o.height);return o.toDataURL("image/png")}
+$("sgc").addEventListener("pointerdown",function(e){var c=$("sgc"),x=c.getContext("2d");SGD=true;SGINK=true;SGP=sgPos(e);x.lineWidth=3;x.lineCap="round";x.lineJoin="round";x.strokeStyle="#111";x.beginPath();x.moveTo(SGP[0],SGP[1]);x.lineTo(SGP[0]+.1,SGP[1]+.1);x.stroke();if(c.setPointerCapture)c.setPointerCapture(e.pointerId);e.preventDefault()});
+$("sgc").addEventListener("pointermove",function(e){if(!SGD)return;var x=$("sgc").getContext("2d"),p=sgPos(e);x.beginPath();x.moveTo(SGP[0],SGP[1]);x.lineTo(p[0],p[1]);x.stroke();SGP=p;e.preventDefault()});
+["pointerup","pointercancel"].forEach(function(n){$("sgc").addEventListener(n,function(){SGD=false})});
+$("sgcl").addEventListener("click",sgClear);
+$("sgx").addEventListener("click",function(){$("sgov").hidden=true});
+$("sgok").addEventListener("click",function(){if(!SGINK){alert("Faça a assinatura antes de salvar.");return}var d=sgExport();if(!d){alert("Faça a assinatura antes de salvar.");return}ctSgSave(d);$("sgov").hidden=true});
 function printDoc(h){clearPR();$("doc").innerHTML=h;document.body.classList.add("pr-doc");setTimeout(function(){try{window.print()}catch(e){}},150)}
-function docPed(p,c){var g=geo(p),rf=p.tp=="ref",rows=rf?[["Tipo","Reforma"],["Tecido",p.tec||"—"]]:[["Modelo",p.modelo||"—"],["Tipo de braço",p.braco||"—"],["Módulos",mTxt(g," de ")],["Braços",g.b+" de "+fm(g.bw)+" cm"],["Tamanho total",fm(g.t)+" cm"],["Tecido",p.tec||"—"]];
+function ctSgImg(sg){return sg?'<img src="'+sg+'" style="position:absolute;bottom:100%;left:50%;transform:translateX(-50%);max-height:13mm;max-width:90%">':""}
+function docPed(p,c,sg){var g=geo(p),rf=p.tp=="ref",rows=rf?[["Tipo","Reforma"],["Tecido",p.tec||"—"]]:[["Modelo",p.modelo||"—"],["Tipo de braço",p.braco||"—"],["Módulos",mTxt(g," de ")],["Braços",g.b+" de "+fm(g.bw)+" cm"],["Tamanho total",fm(g.t)+" cm"],["Tecido",p.tec||"—"]];
 esRows(p).forEach(function(r){rows.push(r)});if(p.obs)rows.push(["Observação",p.obs]);
 var sv="";if(!rf&&g.t>0&&g.mw>0){var r2=topView(g,{wood:"#efefef",wood2:"#cfcfcf",ink:"#000000"});sv='<svg viewBox="'+r2.vb.join(" ")+'" style="width:100%;max-height:44mm;margin-top:2mm">'+r2.inner+"</svg>"}
 var tr=function(a,b){return "<tr><td>"+a+"</td><td>"+b+"</td></tr>"};
@@ -707,20 +735,21 @@ return '<div class="dc"><div class="dh"><div><h1>FÁBRICA LUXOR</h1><div>Pedido 
 +"<h2>Produto</h2><table>"+rows.map(function(r){return tr(esc(r[0]),esc(r[1]))}).join("")+"</table>"+sv
 +"<h2>Condições comerciais</h2><table>"+tr("Valor total",c.valor?"<b>"+ctBrl(c.valor)+"</b> ("+ctExtV(c.valor)+")":"—")+tr("Entrada",c.ent?ctBrl(c.ent)+" · "+esc(c.fe):"—")+tr("Saldo",c.valor?ctBrl(Math.max(0,c.valor-c.ent))+" · "+esc(c.fs):"—")+tr("Prazo de entrega",esc(c.pz||"—"))+tr("Garantia",esc(c.gar||"—"))+"</table>"
 +(c.cl?'<h2>Condições gerais</h2><div style="white-space:pre-wrap;font-size:9.5pt">'+esc(c.cl)+"</div>":"")
-+'<div class="sg"><div style="margin-top:6mm">Local e data: ______________________, ____/____/______</div>'
-+'<div class="ass"><div>'+esc(p.nome)+"<br>Cliente</div><div>Fábrica Luxor<br>Responsável</div></div></div></div>"}
-function docRec(p,c,i){var r=c.recs[i],ate=c.recs.slice(0,i+1).reduce(function(a,x){return a+(+x.v||0)},0),num=(p.num?pad(p.num):"—")+"-"+r.n,tr=function(a,b){return "<tr><td>"+a+"</td><td>"+b+"</td></tr>"};
++'<div class="sg"><div style="margin-top:6mm">'+CTLOC+", "+ctLong(ctIso())+".</div>"
++'<div class="ass"><div>'+esc(p.nome)+"<br>Cliente</div><div>"+ctSgImg(sg)+"Fábrica Luxor<br>Responsável</div></div></div></div>"}
+function docRec(p,c,i,sg){var r=c.recs[i],ate=c.recs.slice(0,i+1).reduce(function(a,x){return a+(+x.v||0)},0),num=(p.num?pad(p.num):"—")+"-"+r.n,tr=function(a,b){return "<tr><td>"+a+"</td><td>"+b+"</td></tr>"};
 return '<div class="dc"><div class="dh"><div><h1>RECIBO</h1><div>Fábrica Luxor</div></div><div style="text-align:right"><b>Recibo nº '+num+"</b><br>"+ctDt(r.d)+"</div></div>"
 +'<div class="box">'+ctBrl(r.v)+"</div>"
 +"<p>Recebi de <b>"+esc(p.nome)+"</b>"+(c.cpf?", CPF/CNPJ "+esc(c.cpf):"")+", a importância de <b>"+ctBrl(r.v)+"</b> ("+ctExtV(r.v)+"), referente a <b>"+esc(String(r.tp).toLowerCase())+"</b> do pedido nº "+(p.num?pad(p.num):"—")+(p.modelo&&p.tp!="ref"?" (sofá "+esc(p.modelo)+")":"")+", pago via "+esc(r.f)+".</p>"
 +'<h2>Resumo</h2><table>'+tr("Valor total do pedido",c.valor?ctBrl(c.valor):"—")+tr("Total pago até esta data",ctBrl(ate))+tr("Saldo restante",c.valor?ctBrl(Math.max(0,c.valor-ate)):"—")+"</table>"
-+'<div style="margin-top:8mm">Local e data: ______________________, '+ctDt(r.d)+"</div>"
-+'<div class="ass"><div>Fábrica Luxor<br>Responsável pelo recebimento</div></div></div>'}
++'<div class="sg"><div style="margin-top:8mm">'+CTLOC+", "+ctLong(r.d)+".</div>"
++'<div class="ass"><div>'+ctSgImg(sg)+"Fábrica Luxor<br>Responsável pelo recebimento</div></div></div></div>"}
 async function ctDo(a,i){var p=mpd(),m=$("ctmsg");if(!p||p.ph||ROLE!="dono")return;
+var sgi=ctSgGet();
 try{if(a=="save"){var o=ctRead();o.pid=p.id;o.nome=p.nome;await setDoc(doc(DB,"contratos",p.id),o,{merge:true});m.textContent="Dados salvos."}
-else if(a=="pdf"){var o1=ctRead();o1.pid=p.id;o1.nome=p.nome;await setDoc(doc(DB,"contratos",p.id),o1,{merge:true});var c1=ctGet(p);for(var k in o1)c1[k]=o1[k];printDoc(docPed(p,c1))}
-else if(a=="rec"){var v=ctPm($("ctrv").value);if(v<=0){m.textContent="Informe o valor do recibo.";return}var o2=ctRead(),c2=ctGet(p),mx=c2.recs.reduce(function(a,r){return Math.max(a,r.n||0)},0),rec={n:mx+1,v:v,f:$("ctrf").value,tp:$("ctrt").value,d:$("ctrd").value||ctIso(),by:ME?ME.nome:"",t:Date.now()},recs=c2.recs.concat([rec]);o2.pid=p.id;o2.nome=p.nome;o2.recs=recs;await setDoc(doc(DB,"contratos",p.id),o2,{merge:true});for(var k2 in o2)c2[k2]=o2[k2];printDoc(docRec(p,c2,recs.length-1))}
-else if(a=="rp"){printDoc(docRec(p,ctGet(p),i))}
+else if(a=="pdf"){var o1=ctRead();o1.pid=p.id;o1.nome=p.nome;await setDoc(doc(DB,"contratos",p.id),o1,{merge:true});var c1=ctGet(p);for(var k in o1)c1[k]=o1[k];printDoc(docPed(p,c1,sgi))}
+else if(a=="rec"){var v=ctPm($("ctrv").value);if(v<=0){m.textContent="Informe o valor do recibo.";return}var o2=ctRead(),c2=ctGet(p),mx=c2.recs.reduce(function(a,r){return Math.max(a,r.n||0)},0),rec={n:mx+1,v:v,f:$("ctrf").value,tp:$("ctrt").value,d:$("ctrd").value||ctIso(),by:ME?ME.nome:"",t:Date.now()},recs=c2.recs.concat([rec]);o2.pid=p.id;o2.nome=p.nome;o2.recs=recs;await setDoc(doc(DB,"contratos",p.id),o2,{merge:true});for(var k2 in o2)c2[k2]=o2[k2];printDoc(docRec(p,c2,recs.length-1,sgi))}
+else if(a=="rp"){printDoc(docRec(p,ctGet(p),i,sgi))}
 else if(a=="rdel"){if(confirm("Excluir este recibo?")){var c3=ctGet(p);c3.recs.splice(i,1);await setDoc(doc(DB,"contratos",p.id),{recs:c3.recs},{merge:true})}}}
 catch(e){if(m)m.textContent="Não foi possível salvar ("+(e&&e.code||"erro")+")."}}
 window.addEventListener("online",render);window.addEventListener("offline",render);
