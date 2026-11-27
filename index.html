@@ -59,7 +59,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 </head>
 <body>
 <div class="top"><div class="row" style="margin:0;flex-wrap:nowrap;min-width:0;flex:1"><button class="mb np" id="mb" aria-label="Pedidos">☰</button><div style="min-width:0"><h1 id="ttl">Pedido</h1><div id="hsub" style="font-size:.72rem;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div></div><span style="display:flex;gap:6px;align-items:center"><button id="cfg" class="np" hidden aria-label="Aparência" style="background:rgba(255,255,255,.25);border-color:transparent;color:#fff;font-size:1rem;padding:3px 9px">⚙</button><span class="bd" id="bd">carregando…</span></span></div>
-<div class="tabs np"><button class="tb on" data-t="p">Pedidos</button><button class="tb" data-t="cm">Corte madeira</button><button class="tb" data-t="mc">Marcenaria</button><button class="tb" data-t="es">Espumagem</button><button class="tb" data-t="cc">Corte e costura</button><button class="tb" data-t="mf">Montagem e finalização</button><button class="tb" data-t="en" hidden>Entrega</button><button class="tb" data-t="md" hidden>Modelos</button><button class="tb" data-t="eq" hidden>Equipe</button><button class="tb" data-t="ct" hidden>Contratos</button></div>
+<div class="tabs np"><button class="tb on" data-t="p">Pedidos</button><button class="tb" data-t="cm">Corte madeira</button><button class="tb" data-t="mc">Marcenaria</button><button class="tb" data-t="es">Espumagem</button><button class="tb" data-t="cc">Corte e costura</button><button class="tb" data-t="mf">Montagem e finalização</button><button class="tb" data-t="en" hidden>Entrega</button><button class="tb" data-t="md" hidden>Modelos</button><button class="tb" data-t="eq" hidden>Equipe</button><button class="tb" data-t="ct" hidden>Contratos</button><button class="tb" data-t="inv" hidden>Estoque</button><button class="tb" data-t="buy" hidden>Compras</button></div>
 
 <div id="login" style="position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
 <div class="card" style="width:min(92vw,360px)"><h2>Fábrica Luxor</h2><label for="le">E-mail</label><input id="le" type="email" autocomplete="username" autocapitalize="off"><label for="lp" style="margin-top:8px">Senha</label><input id="lp" type="password" autocomplete="current-password"><div class="warn" id="lmsg"></div><button class="p" id="lb2" style="margin-top:10px;width:100%">Entrar</button></div></div>
@@ -125,7 +125,7 @@ input[type=checkbox]{width:auto}.ck{display:flex;gap:8px;align-items:center;marg
 <div class="warn" id="eqm"></div><button class="p" data-eqadd="1" style="margin-top:10px">Adicionar</button></div></div>
 <div id="tabN" hidden></div>
 <div id="tabD" hidden></div>
-<div id="tabC" hidden></div>
+<div id="tabC" hidden></div><div id="tabInv" hidden></div><div id="tabBuy" hidden></div>
 <div id="tabM" hidden>
 <div class="card" id="stbox"></div>
 <div class="card"><h2>Pedido</h2><div id="det"></div></div>
@@ -217,7 +217,7 @@ function sitR(p){var q=sitOf(p);$("sitbox").innerHTML='<span class="bd2" style="
 function avisos(){var seen=[];try{seen=JSON.parse(localStorage.getItem("vistos")||"[]")}catch(e){}
 $("avisos").innerHTML=TAB!="p"?"":S.pedidos.filter(function(q){return q.finAt&&seen.indexOf(q.id)<0}).map(function(q){return '<div class="aviso np"><span>Sofá pronto: <b>'+esc(q.nome||"")+'</b></span><button data-vi="'+q.id+'">OK</button></div>'}).join("")}
 var SR={mc:"marceneiro",es:"espumagem",cc:"costureira",mf:"montagem"},RL={dono:"Dono",vendedora:"Vendedora",marceneiro:"Marceneiro",espumagem:"Espumagem",costureira:"Costureira",montagem:"Montagem"};
-var ALL=["p","cm","mc","es","cc","mf","en","md","eq","ct"],OPS=["p","cm","mc","es","cc","mf","en"],DEFT={vendedora:["p"],marceneiro:["cm","mc"],espumagem:["es"],costureira:["cc"],montagem:["mf"]},TN={p:"Pedidos",cm:"Corte madeira",mc:"Marcenaria",es:"Espumagem",cc:"Corte e costura",mf:"Montagem e finalização",en:"Entrega"},UL=[],EQED=null;
+var ALL=["p","cm","mc","es","cc","mf","en","md","eq","ct","inv","buy"],OPS=["p","cm","mc","es","cc","mf","en","inv","buy"],DEFT={vendedora:["p"],marceneiro:["cm","mc"],espumagem:["es"],costureira:["cc"],montagem:["mf"]},TN={p:"Pedidos",cm:"Corte madeira",mc:"Marcenaria",es:"Espumagem",cc:"Corte e costura",mf:"Montagem e finalização",en:"Entrega",inv:"Estoque",buy:"Compras"},UL=[],EQED=null;
 function aplic(q,t){return !(q&&q.tp=="ref"&&(t=="mc"||t=="es"||t=="cm"))}
 function canStage(){return ["mc","es","cc","mf"].indexOf(TAB)>=0&&(EDIT||ALLOWED.indexOf(TAB)>=0)&&aplic(mpd(),TAB)}
 function EDITEN(){return EDIT||ALLOWED.indexOf("p")>=0}
@@ -470,6 +470,7 @@ list.forEach(function(c){if(nm(c.nome)==nm(val))ok=true;h+='<option value="'+esc
 if(val&&!list.some(function(c){return c.nome==val})){h+='<option value="'+esc(val)+'">'+esc(val)+" (não cadastrado)</option>"}
 el.innerHTML=h;el.value=val||""}
 function render(){
+$("tabInv").hidden=TAB!="inv";$("tabBuy").hidden=TAB!="buy";if(TAB=="inv"||TAB=="buy"){["tabP","tabM","tabC","tabN","tabE","tabD"].forEach(function(k){$(k).hidden=true});$("ttl").textContent=TN[TAB];$("hsub").textContent="";document.querySelectorAll(".tb").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-t")==TAB)});invRender();return;}
 var p=cp();
 $("bd").textContent=(ME?ME.nome:"")+(navigator.onLine?"":" · offline");$("ttl").textContent=TAB=="eq"?"Equipe":TAB=="md"?"Modelos":TAB=="ct"?"Contratos":tt(TAB=="p"?p:mpd());sitR(p);phR(p);avisos();$("hsub").textContent=hs();repUI();fotoUI();fotoRUI();
 $("tabP").hidden=TAB!="p";$("tabM").hidden=TAB=="p"||TAB=="eq"||TAB=="md"||TAB=="en"||TAB=="ct";$("tabC").hidden=TAB!="ct";$("tabN").hidden=TAB!="en";$("tabE").hidden=TAB!="eq";$("tabD").hidden=TAB!="md";
@@ -622,14 +623,14 @@ await setDoc(doc(DB,"Users",c.user.uid),{Nome:n,Role:dn?"dono":"equipe",Abas:ab,
 var app=initializeApp(FBCFG);AUTH=getAuth(app);
 DB=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
 onAuthStateChanged(AUTH,async function(u){
-if(!u){ME=null;ROLE="";$("login").hidden=false;return}
+if(!u){invStop();ME=null;ROLE="";$("login").hidden=false;return}
 var d;try{var sn=await getDoc(doc(DB,"Users",u.uid));d=sn.exists()?sn.data():null}catch(x){$("lmsg").textContent="Não foi possível carregar sua conta. Conecte à internet para o primeiro acesso.";await signOut(AUTH);return}
 var r=d?String(d.Role||d.role||"").toLowerCase():"";var ab=d&&Array.isArray(d.Abas)?d.Abas:(DEFT[r]||[]);
 var isD=r=="dono",al=isD?ALL:OPS.filter(function(t){return ab.indexOf(t)>=0});
 if(!al.length){$("lmsg").textContent="Sua conta ainda não tem abas liberadas. Fale com o dono.";await signOut(AUTH);return}
 ROLE=isD?"dono":"equipe";ME={uid:u.uid,nome:d.Nome||d.nome||u.email};ALLOWED=al;EDIT=isD;$("cfg").hidden=!isD;EDITP=isD||al.indexOf("p")>=0;
 document.querySelectorAll(".tb").forEach(function(b){b.hidden=ALLOWED.indexOf(b.getAttribute("data-t"))<0});
-TAB=ALLOWED[0];MSEL=null;$("eqa").innerHTML=abHtml("",[]);$("login").hidden=true;$("lmsg").textContent="";startData();render()});
+TAB=ALLOWED[0];MSEL=null;$("eqa").innerHTML=abHtml("",[]);$("login").hidden=true;$("lmsg").textContent="";startData();invStart();render()});
 $("lb2").addEventListener("click",function(){$("lmsg").textContent="";signInWithEmailAndPassword(AUTH,$("le").value.trim(),$("lp").value).catch(function(e){var c=e&&e.code||"";$("lmsg").textContent=(c=="auth/invalid-credential"||c=="auth/wrong-password"||c=="auth/user-not-found"||c=="auth/invalid-email")?"E-mail ou senha incorretos.":c=="auth/too-many-requests"?"Muitas tentativas. Aguarde alguns minutos e tente de novo.":c=="auth/network-request-failed"?"Sem conexão com a internet.":"Não foi possível entrar ("+(c||"erro")+")."})});
 $("out").addEventListener("click",function(){signOut(AUTH);openD(false)});
 $("syn").addEventListener("click",async function(){var m=$("synm");m.textContent="Sincronizando…";try{await enableNetwork(DB);await Promise.race([waitForPendingWrites(DB),new Promise(function(_,rj){setTimeout(rj,8000)})]);m.textContent="Sincronizado às "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}catch(x){m.textContent="Sem conexão. Os dados estão salvos no aparelho."}});
@@ -752,6 +753,23 @@ else if(a=="rec"){var v=ctPm($("ctrv").value);if(v<=0){m.textContent="Informe o 
 else if(a=="rp"){printDoc(docRec(p,ctGet(p),i,sgi))}
 else if(a=="rdel"){if(confirm("Excluir este recibo?")){var c3=ctGet(p);c3.recs.splice(i,1);await setDoc(doc(DB,"contratos",p.id),{recs:c3.recs},{merge:true})}}}
 catch(e){if(m)m.textContent="Não foi possível salvar ("+(e&&e.code||"erro")+")."}}
+
+var INV=[],BUY=[],INVSTOP=[],INVERR="",INVSEARCH="",INVBUSY=false;
+function invCan(t){return !!ME&&(ROLE=="dono"||ALLOWED.indexOf(t)>=0)}
+function invStop(){INVSTOP.forEach(function(f){f()});INVSTOP=[];INV=[];BUY=[];INVERR="";INVSEARCH=""}
+function invStart(){invStop();if(!ME)return;["estoque","compras"].forEach(function(c){if(!invCan(c=="estoque"?"inv":"buy"))return;INVSTOP.push(onSnapshot(collection(DB,c),function(sn){var a=[];sn.forEach(function(d){a.push(Object.assign({},d.data(),{id:d.id}))});if(c=="estoque")INV=a;else BUY=a;if(TAB=="inv"||TAB=="buy")invRender()},function(e){INVERR="Acesso ao banco: "+e.code;if(TAB=="inv"||TAB=="buy")invRender()}))})}
+function invRender(){var el=$(TAB=="inv"?"tabInv":"tabBuy"),owner=ROLE=="dono";if(!invCan(TAB)){el.textContent="Sem acesso.";return}var h='<div class="card"><h2>'+TN[TAB]+'</h2><p class="s">'+esc(INVERR)+'</p>';
+if(TAB=="inv"){h+='<label>Buscar material ou código</label><input id="invsearch" value="'+esc(INVSEARCH)+'">'+(owner?'<button class="p" data-iv="new">+ Material</button>':'')+'</div>';h+=INV.filter(function(x){return (x.nome+" "+x.codigo).toLowerCase().includes(INVSEARCH.toLowerCase())}).sort(function(a,b){return a.nome.localeCompare(b.nome)}).map(function(x){return '<div class="card"><h2>'+esc(x.nome)+'</h2><p class="s">'+esc(x.setor)+' · '+esc(x.codigo||"Sem código")+'</p><b>'+esc(x.saldo)+' '+esc(x.unidade)+'</b><p>Mínimo: '+esc(x.minimo)+(x.saldo<=x.minimo?' · Estoque baixo':'')+'</p><div class="row">'+(owner?'<button data-iv="in" data-i="'+esc(x.id)+'">+ Entrada</button>':'')+'<button data-iv="out" data-i="'+esc(x.id)+'">− Saída</button>'+(invCan("buy")?'<button data-iv="req" data-i="'+esc(x.id)+'">Solicitar compra</button>':'')+'</div></div>'}).join("")}
+else{h+='<button class="p" data-iv="req">+ Solicitação</button></div>';h+=BUY.slice().sort(function(a,b){return b.t-a.t}).map(function(x){var next={pendente:"aprovada",aprovada:"comprada",comprada:"recebida"}[x.status];return '<div class="card"><h2>'+esc(x.nome)+'</h2><p>'+esc(x.qtd)+' '+esc(x.unidade)+' · '+esc(x.status)+'</p><p class="s">'+esc(x.por)+' · '+esc(x.obs||"")+'</p>'+(owner&&next?'<button data-iv="'+next+'" data-i="'+esc(x.id)+'">'+next+'</button>':'')+(owner&&x.status=="pendente"?'<button data-iv="recusada" data-i="'+esc(x.id)+'">Recusar</button>':'')+'</div>'}).join("")}el.innerHTML=h}
+function invAsk(t,d){var v=prompt(t,d||"");return v===null?null:v.trim()}
+function invQty(t){var v=invAsk(t);if(v===null)return null;var n=Number(v.replace(",","."));return Number.isFinite(n)&&n>0?n:null}
+document.addEventListener("change",function(e){if(e.target.id=="invsearch"){INVSEARCH=e.target.value;invRender()}});
+document.addEventListener("click",async function(e){var b=e.target.closest("[data-iv]");if(!b||!ME||INVBUSY)return;var a=b.dataset.iv,id=b.dataset.i,x=INV.find(function(z){return z.id==id}),owner=ROLE=="dono";INVBUSY=true;try{
+if(a=="new"&&owner&&invCan("inv")){var n=invAsk("Nome do material");if(!n)return;var u=invAsk("Unidade (m, un, kg, m²)","un"),s=invAsk("Setor"),c=invAsk("Código de barras (opcional)"),m=invAsk("Estoque mínimo","0");if(!u||!s||c===null||m===null)return;var mn=Number(m.replace(",","."));if(!Number.isFinite(mn)||mn<0)throw Error("Mínimo inválido");await setDoc(doc(collection(DB,"estoque")),{nome:n,unidade:u,setor:s,codigo:c,minimo:mn,saldo:0})}
+else if((a=="in"||a=="out")&&x&&invCan("inv")&&(a=="out"||owner)){var q=invQty("Quantidade");if(!q)return;var ref=doc(DB,"estoque",id),mov=doc(collection(DB,"estoqueMov")),uid=ME.uid,nome=ME.nome;await runTransaction(DB,async function(tx){var sn=await tx.get(ref);if(!sn.exists())throw Error("Material inexistente");var saldo=Number(sn.data().saldo)+(a=="in"?q:-q);if(!Number.isFinite(saldo)||saldo<0)throw Error("Saldo insuficiente");tx.update(ref,{saldo:saldo});tx.set(mov,{material:id,tipo:a,qtd:q,saldo:saldo,uid:uid,por:nome,t:Date.now()})})}
+else if(a=="req"&&invCan("buy")){var n=x?x.nome:invAsk("Material");if(!n)return;var q=invQty("Quantidade");if(!q)return;var u=x?x.unidade:invAsk("Unidade","un"),o=invAsk("Observação / urgência");if(!u||o===null)return;await setDoc(doc(collection(DB,"compras")),{nome:n,qtd:q,unidade:u,obs:o,material:x?x.id:"",status:"pendente",uid:ME.uid,por:ME.nome,t:Date.now()})}
+else if(owner&&invCan("buy")&&["aprovada","comprada","recebida","recusada"].includes(a)){var ref=doc(DB,"compras",id);await runTransaction(DB,async function(tx){var sn=await tx.get(ref);if(!sn.exists())throw Error("Solicitação inexistente");var st=sn.data().status;if(!({pendente:["aprovada","recusada"],aprovada:["comprada"],comprada:["recebida"]}[st]||[]).includes(a))throw Error("Status já alterado");tx.update(ref,{status:a,atualizado:Date.now(),responsavel:ME.uid})})}
+}catch(err){alert("Não foi possível concluir: "+(err.code||err.message))}finally{INVBUSY=false}});
 window.addEventListener("online",render);window.addEventListener("offline",render);
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </script>
